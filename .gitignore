@@ -1,0 +1,19 @@
+# Compilação PyInstaller
+build/
+dist/
+*.spec
+
+# Caches do Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDEs
+.vscode/
+.idea/
+.gemini/
+*.swp
+
+# Arquivos de log e testes
+*.log
+*.sqlite3

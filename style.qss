@@ -1,0 +1,168 @@
+/* Configurações Globais */
+QWidget {
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+    color: #e0d0b0;
+}
+
+/* O Card Principal sem bordas arredondadas e fundo limpo */
+#MainCard {
+    background-color: #120c18;
+    border-radius: 10px;
+    border: 1px solid #351554;
+}
+
+/* Barra de Título Customizada */
+#TitleBar {
+    background-color: #0b070f;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom: 1px solid #482963;
+}
+
+#TitleLabel {
+    color: #d9b855;
+    font-weight: bold;
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+/* Botões da Barra de Título */
+#TitleBtn {
+    background-color: transparent;
+    border: none;
+    color: #8c73a6;
+    font-weight: bold;
+    font-size: 16px;
+    border-radius: 4px;
+}
+#TitleBtn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #d9b855;
+}
+
+#TitleBtnClose {
+    background-color: transparent;
+    border: none;
+    color: #8c73a6;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 4px;
+}
+#TitleBtnClose:hover {
+    background-color: #c42b2b;
+    color: white;
+}
+
+/* Labels do Formulário */
+QLabel {
+    color: #d9b855;
+    font-weight: 600;
+}
+
+/* Inputs de Texto e Dropdowns */
+QLineEdit, QComboBox {
+    background-color: #1e1526;
+    border: 1px solid #482963;
+    border-radius: 6px;
+    color: #ffffff;
+    padding: 8px 12px;
+    selection-background-color: #5c3285;
+    selection-color: #ffffff;
+}
+
+QLineEdit:focus, QComboBox:focus {
+    border: 1px solid #d9b855;
+    background-color: #261b30;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+
+QComboBox::down-arrow {
+    image: none; /* Poderíamos usar um ícone aqui se tivéssemos */
+}
+
+/* Botão de Toggle da Senha */
+#TogglePassBtn {
+    background-color: #1e1526;
+    border: 1px solid #482963;
+    border-radius: 6px;
+    color: #d9b855;
+    font-weight: bold;
+}
+#TogglePassBtn:hover {
+    background-color: #2d6ca3;
+    color: white;
+    border-color: #d9b855;
+}
+
+/* Caixas de Seleção */
+QCheckBox {
+    color: #a893c4;
+    spacing: 8px;
+}
+QCheckBox:hover {
+    color: #d9b855;
+}
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #482963;
+    border-radius: 4px;
+    background: #1e1526;
+}
+QCheckBox::indicator:checked {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2d6ca3, stop:1 #163e63);
+    border: 2px solid #d9b855;
+}
+
+/* Botões Principais */
+#LaunchBtn {
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #5c3285, stop:1 #351554);
+    border: 2px solid #d9b855;
+    border-radius: 8px;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 15px;
+    letter-spacing: 1px;
+}
+#LaunchBtn:hover {
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #2d6ca3, stop:1 #163e63);
+    border: 2px solid #f7d674;
+}
+#LaunchBtn:pressed {
+    background-color: #163e63;
+}
+
+#ExitBtn {
+    background-color: #1e1526;
+    border: 1px solid #482963;
+    border-radius: 8px;
+    color: #a893c4;
+    font-weight: bold;
+    font-size: 14px;
+}
+#ExitBtn:hover {
+    background-color: #c42b2b;
+    color: white;
+    border: 1px solid #ff4d4d;
+}
+
+/* Caixa de Mensagem (Avisos de Erro) */
+QMessageBox {
+    background-color: #120c18;
+}
+QMessageBox QLabel {
+    color: #e0d0b0;
+    font-weight: normal;
+}
+QMessageBox QPushButton {
+    background-color: #482963;
+    border: 1px solid #d9b855;
+    border-radius: 4px;
+    padding: 5px 15px;
+    color: white;
+}
