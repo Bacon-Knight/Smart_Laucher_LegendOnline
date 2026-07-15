@@ -1,0 +1,24 @@
+apresentar junto ao botão de contas salvas a opção de excluir contas
+
+O nome da Janela na barra de Tarefas aparecer com o nome do Nick colocado ao Logar
+
+
+Abrindo 3 telas ocorreu uma lentidão considerável nos carregamentos.
+
+Verificar se os arquivos baixados são compartilhados em todas as contas
+
+Ao fechar o HUB deixar ele em "backgroud" setinha da barras de Tarefas
+
+Incluir botão Backgound pra deixar as janelas em segundo plano setinha da barras de tarefas
+
+Botão boss (CTRL + SHIFT + A) Ativa desativa sumindo todas as telas
+
+Botão pra fechar todas as contas automaticamente
+
+Ao sair do HUB fechar todas as contas
+
+Aparecer aquela função do Windows de AutoTile
+
+Formação Mágica Loop.. não aguardar os segundos para o próximo ataque reduzir tempo de espera pra 5 segundos ao invés de 10 demora pra atacar vide print demorou fechar o quadrado
+atacou o meio antes de fazer as outras é importante que ele ataque o meio somente depoisde atacar os outros 16 quadros script não funcionando
+

@@ -31,10 +31,16 @@ O Launcher possui um pequeno botão de Ferramentas (`🛠`) na borda da janela. 
 
 ---
 
-## 💻 Instalação & Compilação
-Se você é um jogador final, basta baixar o `LegendOnlineLauncher_v1.3.exe` e colocar na mesma pasta do seu `pepflashplayer.dll` e abrir.
+## 🧠 Nova Arquitetura Modular (v2.0)
 
-Se você for modificar o código ou contribuir:
+O projeto foi completamente refatorado e separado em módulos dentro da pasta `src/` para facilitar a manutenção e escalabilidade:
+- **`src/core/`**: Gerenciamento de macros via `QThread` (rodando em paralelo sem travar a UI), sistema central de configurações e gerador de logs (`logger.py`). O cache e os logs de erros agora são salvos de forma limpa na pasta oficial `%LOCALAPPDATA%\\LegendOnlineLauncher`.
+- **`src/ui/`**: A interface e seus componentes. Conta com uma classe base inteligente (`FramelessWindowMixin`) que garante sombras, cantos arredondados e ativa o recurso *Snap Layouts* (Auto-Tile) de forma nativa no Windows!
+
+## 💻 Instalação & Compilação
+Se você é um jogador final, basta baixar o executável e colocar na mesma pasta do seu `pepflashplayer.dll`.
+
+Se você for modificar o código:
 ### Requisitos
 - Python 3.x
 - Pacotes instalados: `pip install PyQt5 PyQtWebEngine pyinstaller`

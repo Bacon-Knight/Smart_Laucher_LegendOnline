@@ -17,3 +17,7 @@ __pycache__/
 # Arquivos de log e testes
 *.log
 *.sqlite3
+
+# Binários grandes e Caches Chromium
+*.exe
+cache/
