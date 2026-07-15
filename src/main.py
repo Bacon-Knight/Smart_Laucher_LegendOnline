@@ -11,13 +11,18 @@ def main():
     logger = get_logger("Main")
     logger.info("Iniciando o Launcher Legend Online...")
     
-    plugin_path = os.path.abspath("pepflashplayer.dll")
+    plugin_path = resource_path("pepflashplayer.dll")
 
     sys.argv.append(f"--ppapi-flash-path={plugin_path}")
     sys.argv.append("--ppapi-flash-version=32.0.0.371") 
     sys.argv.append("--ignore-gpu-blocklist")
     sys.argv.append("--enable-gpu-rasterization")
     sys.argv.append("--enable-zero-copy")
+    sys.argv.append("--disable-site-isolation-trials")
+    sys.argv.append("--renderer-process-limit=3")
+    sys.argv.append("--js-flags=--max-old-space-size=512")
+    sys.argv.append("--disable-logging")
+    sys.argv.append("--disable-gpu-memory-buffer-video-frames")
 
     app = QApplication(sys.argv)
     QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.PluginsEnabled, True)

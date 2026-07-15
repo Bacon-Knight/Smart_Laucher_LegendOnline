@@ -1,6 +1,6 @@
 import time
 from PyQt5.QtCore import QThread, pyqtSignal, QCoreApplication, QEvent, Qt
-from PyQt5.QtGui import QMouseEvent
+from PyQt5.QtGui import QMouseEvent, QKeyEvent
 
 class MacroWorker(QThread):
     # Emitido para atualizar a barra de título
@@ -20,6 +20,8 @@ class MacroWorker(QThread):
             self.run_autoclicker()
         elif self.macro_type == 'formacao':
             self.run_formacao()
+        elif self.macro_type == 'autoluta':
+            self.run_autoluta()
             
     def run_autoclicker(self):
         pos = self.params.get('pos')
@@ -57,7 +59,23 @@ class MacroWorker(QThread):
                 if not self.is_running:
                     break
                 time.sleep(0.1)
-                
+        self.finished.emit()
+
+    def run_autoluta(self):
+        pos = self.params.get('pos')
+        self.status_update.emit("⚔️ AUTO LUTA: Atacando! (Ativando habilidade 2...)")
+        
+        event_press = QKeyEvent(QEvent.KeyPress, Qt.Key_2, Qt.NoModifier, "2", False, 1)
+        QCoreApplication.postEvent(self.target_widget, event_press)
+        event_release = QKeyEvent(QEvent.KeyRelease, Qt.Key_2, Qt.NoModifier, "2", False, 1)
+        QCoreApplication.postEvent(self.target_widget, event_release)
+        
+        time.sleep(0.5)
+        
+        if self.is_running and pos:
+            self.send_click(pos)
+            
+        time.sleep(1.0)
         self.finished.emit()
         
     def send_click(self, pos):

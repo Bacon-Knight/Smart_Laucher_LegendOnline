@@ -23,7 +23,7 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
         self.password = password
         self.server_url = server_url
         self.nick = nick
-        self.is_muted = False
+        self.is_muted = True
         self.bg_color = bg_color
         
         self.setGeometry(150, 150, 1040, 800)
@@ -67,6 +67,13 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
         self.shortcut_stop = QShortcut(QKeySequence("F4"), self)
         self.shortcut_stop.activated.connect(self.stop_macros)
         
+        self.autoluta_active = False
+        self.timer_autoluta = QTimer(self)
+        self.timer_autoluta.timeout.connect(self.check_autoluta)
+        
+        self.shortcut_autoluta = QShortcut(QKeySequence("F5"), self)
+        self.shortcut_autoluta.activated.connect(self.toggle_autoluta)
+        
         safe_email = "".join(c for c in email if c.isalnum() or c in ('@', '.', '_')).replace('@', '_')
         if not safe_email:
             safe_email = "default_profile"
@@ -85,7 +92,10 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
             self.profile.setHttpCacheType(QWebEngineProfile.NoCache)
             
         self.page = QWebEnginePage(self.profile, self.browser)
+        self.page.setAudioMuted(self.is_muted)
         self.browser.setPage(self.page)
+        
+        self.title_bar.btn_mute.setText("🔇" if self.is_muted else "🔊")
         
         self.enable_windows_snap()
         self.browser.loadFinished.connect(self.inject_login)
@@ -139,6 +149,49 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
             self.macro_worker.finished.connect(self.stop_macros)
             self.macro_worker.start()
 
+    def toggle_autoluta(self):
+        self.autoluta_active = not self.autoluta_active
+        if self.autoluta_active:
+            self.title_bar.title.setText("⚔️ Auto Luta: ON (F5 para desligar, Lendo Tela...)")
+            self.timer_autoluta.start(2000)
+        else:
+            self.timer_autoluta.stop()
+            self.title_bar.title.setText(f"Legend Online - Jogando como: {self.nick or self.email}")
+
+    def check_autoluta(self):
+        if self.macro_worker and self.macro_worker.isRunning():
+            return
+            
+        try:
+            pixmap = self.browser.grab()
+            img = pixmap.toImage()
+            width, height = img.width(), img.height()
+            
+            found = False
+            target_x, target_y = 0, 0
+            
+            start_x = int(width * 0.8)
+            start_y = int(height * 0.8)
+            for y in range(start_y, height, 5):
+                for x in range(start_x, width, 5):
+                    color = QColor(img.pixel(x, y))
+                    if color.red() > 200 and color.green() > 160 and color.blue() < 80:
+                        found = True
+                        target_x, target_y = x, y
+                        break
+                if found: break
+                
+            if found:
+                target_widget = self.browser.focusProxy() if self.browser.focusProxy() else self.browser
+                params = {'pos': QPoint(target_x, target_y)}
+                self.macro_worker = MacroWorker(target_widget, 'autoluta', params)
+                self.macro_worker.status_update.connect(self.title_bar.title.setText)
+                self.macro_worker.finished.connect(self.stop_macros)
+                self.macro_worker.start()
+                self.timer_autoluta.stop()
+        except Exception as e:
+            logger.error(f"Erro no Auto Luta: {e}")
+
     def calculate_formacao(self, center_pos):
         base_w, base_h = 104, 52
         win_w, win_h = 1040, 800
@@ -165,8 +218,13 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
             self.macro_worker.stop()
             self.macro_worker.wait()
             self.macro_worker = None
+            
         display_name = self.nick if self.nick else self.email
-        self.title_bar.title.setText(f"Legend Online - Jogando como: {display_name}")
+        if getattr(self, 'autoluta_active', False):
+            self.title_bar.title.setText(f"⚔️ Auto Luta: ON (F5 para desligar, Lendo Tela...)")
+            self.timer_autoluta.start(2000)
+        else:
+            self.title_bar.title.setText(f"Legend Online - Jogando como: {display_name}")
 
     def toggle_mute(self):
         self.is_muted = not self.is_muted

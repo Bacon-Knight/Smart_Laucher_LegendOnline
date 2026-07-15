@@ -58,7 +58,7 @@ class LauncherHub(QMainWindow):
         super().__init__()
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setGeometry(100, 100, 1100, 130)
+        self.setGeometry(100, 100, 1100, 80)
         
         self.settings = QSettings("CustomLauncher", "LegendOnline")
         self.game_windows = []
@@ -70,6 +70,7 @@ class LauncherHub(QMainWindow):
         self.shortcut_boss.setContext(Qt.ApplicationShortcut)
         self.shortcut_boss.activated.connect(self.toggle_boss_key)
         
+        # Reativando o AFKManager a pedido do usuário (esconde o app automaticamente)
         self.afk_manager = AFKManager(self, timeout_mins=2)
         
         self.init_ui()
@@ -186,8 +187,8 @@ class LauncherHub(QMainWindow):
         
         content_widget = QWidget()
         content_layout = QHBoxLayout(content_widget)
-        content_layout.setContentsMargins(20, 15, 20, 20)
-        content_layout.setSpacing(12)
+        content_layout.setContentsMargins(20, 5, 20, 5)
+        content_layout.setSpacing(8)
         
         self.saved_accounts = {}
         try:
@@ -214,7 +215,7 @@ class LauncherHub(QMainWindow):
         
         self.btn_accounts = QPushButton("📋")
         self.btn_accounts.setObjectName("TogglePassBtn") 
-        self.btn_accounts.setFixedSize(36, 36)
+        self.btn_accounts.setFixedSize(30, 30)
         self.btn_accounts.setToolTip("Contas Salvas")
         self.btn_accounts.clicked.connect(self.show_accounts_menu)
         
@@ -235,7 +236,7 @@ class LauncherHub(QMainWindow):
         
         self.btn_toggle_pass = QPushButton("👁")
         self.btn_toggle_pass.setObjectName("TogglePassBtn")
-        self.btn_toggle_pass.setFixedSize(36, 36)
+        self.btn_toggle_pass.setFixedSize(30, 30)
         self.btn_toggle_pass.clicked.connect(self.toggle_password_visibility)
         
         pass_layout.addWidget(self.input_password)
@@ -256,13 +257,13 @@ class LauncherHub(QMainWindow):
         
         self.btn_ok = QPushButton(" INICIAR JOGO ")
         self.btn_ok.setObjectName("LaunchBtn")
-        self.btn_ok.setFixedHeight(36)
+        self.btn_ok.setFixedHeight(30)
         self.btn_ok.setMinimumWidth(140)
         self.btn_ok.clicked.connect(self.launch_game)
         
         self.btn_cancel = QPushButton(" SAIR ")
         self.btn_cancel.setObjectName("ExitBtn")
-        self.btn_cancel.setFixedHeight(36)
+        self.btn_cancel.setFixedHeight(30)
         self.btn_cancel.setFixedWidth(80)
         self.btn_cancel.clicked.connect(self.close)
         
