@@ -1,6 +1,8 @@
 import json
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QComboBox, QLineEdit, QSystemTrayIcon, QMenu, QAction, QMessageBox, QGraphicsDropShadowEffect, QStyle
-from PyQt5.QtCore import Qt, QSettings, QPoint
+import ctypes
+from ctypes import wintypes
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QComboBox, QLineEdit, QSystemTrayIcon, QMenu, QAction, QMessageBox, QGraphicsDropShadowEffect, QStyle, QApplication
+from PyQt5.QtCore import Qt, QSettings, QPoint, QObject, QTimer
 from PyQt5.QtGui import QColor, QKeySequence
 from PyQt5.QtWidgets import QShortcut
 
@@ -10,6 +12,46 @@ from src.ui.components.title_bar import CustomTitleBar
 from src.ui.game_window import GameWindow
 
 logger = get_logger("LauncherHub")
+
+class LASTINPUTINFO(ctypes.Structure):
+    _fields_ = [
+        ("cbSize", wintypes.UINT),
+        ("dwTime", wintypes.DWORD)
+    ]
+
+def get_system_idle_time_ms():
+    lii = LASTINPUTINFO()
+    lii.cbSize = ctypes.sizeof(LASTINPUTINFO)
+    if ctypes.windll.user32.GetLastInputInfo(ctypes.byref(lii)):
+        return ctypes.windll.kernel32.GetTickCount() - lii.dwTime
+    return 0
+
+class AFKManager(QObject):
+    def __init__(self, hub, timeout_mins=2):
+        super().__init__()
+        self.hub = hub
+        self.timeout_ms = timeout_mins * 60 * 1000
+        self.inactive_ms = 0
+        
+        self.check_timer = QTimer(self)
+        self.check_timer.timeout.connect(self.check_state)
+        self.check_timer.start(5000) # Checa a cada 5 segundos
+
+    def check_state(self):
+        app = QApplication.instance()
+        is_app_focused = app.activeWindow() is not None
+        sys_idle = get_system_idle_time_ms()
+        
+        if sys_idle >= self.timeout_ms:
+            self.hub.hide_to_tray()
+            return
+            
+        if not is_app_focused:
+            self.inactive_ms += 5000
+            if self.inactive_ms >= self.timeout_ms:
+                self.hub.hide_to_tray()
+        else:
+            self.inactive_ms = 0
 
 class LauncherHub(QMainWindow):
     def __init__(self):
@@ -27,6 +69,8 @@ class LauncherHub(QMainWindow):
         self.shortcut_boss = QShortcut(QKeySequence("Ctrl+Shift+A"), self)
         self.shortcut_boss.setContext(Qt.ApplicationShortcut)
         self.shortcut_boss.activated.connect(self.toggle_boss_key)
+        
+        self.afk_manager = AFKManager(self, timeout_mins=2)
         
         self.init_ui()
         self.load_styles()
@@ -68,16 +112,25 @@ class LauncherHub(QMainWindow):
             self.show_all_games()
 
     def toggle_boss_key(self):
-        self.boss_hidden = not self.boss_hidden
         if self.boss_hidden:
+            self.show_from_tray()
+        else:
+            self.hide_to_tray()
+            
+    def hide_to_tray(self):
+        if not self.boss_hidden:
+            logger.info("Modo Privacidade/AFK Ativado: Escondendo janelas.")
+            self.boss_hidden = True
             self.hide()
             for gw in self.game_windows:
                 try: gw.hide()
                 except: pass
-        else:
-            self.showNormal()
-            self.activateWindow()
-            self.show_all_games()
+
+    def show_from_tray(self):
+        self.boss_hidden = False
+        self.showNormal()
+        self.activateWindow()
+        self.show_all_games()
             
     def show_all_games(self):
         for gw in self.game_windows:
