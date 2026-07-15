@@ -58,7 +58,7 @@ class LauncherHub(QMainWindow):
         super().__init__()
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setGeometry(100, 100, 320, 420)
+        self.setGeometry(100, 100, 1100, 130)
         
         self.settings = QSettings("CustomLauncher", "LegendOnline")
         self.game_windows = []
@@ -162,14 +162,14 @@ class LauncherHub(QMainWindow):
     def init_ui(self):
         wrapper = QWidget()
         wrapper_layout = QVBoxLayout(wrapper)
-        wrapper_layout.setContentsMargins(20, 20, 20, 20)
+        wrapper_layout.setContentsMargins(15, 15, 15, 15)
         self.setCentralWidget(wrapper)
         
         self.main_card = QWidget()
         self.main_card.setObjectName("MainCard")
         
         shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(25)
+        shadow.setBlurRadius(20)
         shadow.setColor(QColor(72, 41, 99, 200))
         shadow.setOffset(0, 0)
         self.main_card.setGraphicsEffect(shadow)
@@ -185,12 +185,9 @@ class LauncherHub(QMainWindow):
         card_layout.addWidget(self.title_bar)
         
         content_widget = QWidget()
-        content_layout = QVBoxLayout(content_widget)
-        content_layout.setContentsMargins(30, 20, 30, 30)
-        content_layout.setSpacing(15)
-        
-        form_layout = QVBoxLayout()
-        form_layout.setSpacing(15)
+        content_layout = QHBoxLayout(content_widget)
+        content_layout.setContentsMargins(20, 15, 20, 20)
+        content_layout.setSpacing(12)
         
         self.saved_accounts = {}
         try:
@@ -205,17 +202,19 @@ class LauncherHub(QMainWindow):
         email_container = QWidget()
         email_layout = QHBoxLayout(email_container)
         email_layout.setContentsMargins(0, 0, 0, 0)
+        email_layout.setSpacing(5)
         
         self.input_email = QComboBox()
         self.input_email.setEditable(True)
-        self.input_email.lineEdit().setPlaceholderText("E-mail")
+        self.input_email.lineEdit().setPlaceholderText("E-mail da Conta")
         self.input_email.addItems(list(self.saved_accounts.keys()))
         self.input_email.setCurrentText(self.settings.value("last_email", ""))
         self.input_email.currentTextChanged.connect(self.on_email_changed)
+        self.input_email.setMinimumWidth(200)
         
         self.btn_accounts = QPushButton("📋")
         self.btn_accounts.setObjectName("TogglePassBtn") 
-        self.btn_accounts.setFixedSize(35, 35)
+        self.btn_accounts.setFixedSize(36, 36)
         self.btn_accounts.setToolTip("Contas Salvas")
         self.btn_accounts.clicked.connect(self.show_accounts_menu)
         
@@ -225,56 +224,56 @@ class LauncherHub(QMainWindow):
         pass_container = QWidget()
         pass_layout = QHBoxLayout(pass_container)
         pass_layout.setContentsMargins(0, 0, 0, 0)
+        pass_layout.setSpacing(5)
         
         current_acc = self.saved_accounts.get(self.input_email.currentText(), {})
         self.input_password = QLineEdit()
         self.input_password.setEchoMode(QLineEdit.Password)
         self.input_password.setPlaceholderText("Senha")
         self.input_password.setText(current_acc.get("password", ""))
+        self.input_password.setMinimumWidth(150)
         
         self.btn_toggle_pass = QPushButton("👁")
         self.btn_toggle_pass.setObjectName("TogglePassBtn")
-        self.btn_toggle_pass.setFixedSize(35, 35)
+        self.btn_toggle_pass.setFixedSize(36, 36)
         self.btn_toggle_pass.clicked.connect(self.toggle_password_visibility)
         
         pass_layout.addWidget(self.input_password)
         pass_layout.addWidget(self.btn_toggle_pass)
         
         self.input_server = QLineEdit()
-        self.input_server.setPlaceholderText("Número do Servidor (ex: 1252)")
+        self.input_server.setPlaceholderText("Srv (ex: 1252)")
         self.input_server.setText(current_acc.get("server", self.settings.value("server", "1252")))
+        self.input_server.setFixedWidth(100)
         
         self.input_nick = QLineEdit()
-        self.input_nick.setPlaceholderText("Nick no Jogo (Opcional)")
+        self.input_nick.setPlaceholderText("Nick")
         self.input_nick.setText(current_acc.get("nick", ""))
+        self.input_nick.setFixedWidth(120)
         
         self.input_color = QComboBox()
         self.input_color.hide()
         
-        form_layout.addWidget(email_container)
-        form_layout.addWidget(pass_container)
-        form_layout.addWidget(self.input_server)
-        form_layout.addWidget(self.input_nick)
-        form_layout.addWidget(self.input_color)
-        
-        content_layout.addLayout(form_layout)
-        
-        buttons_layout = QVBoxLayout()
-        buttons_layout.setContentsMargins(0, 15, 0, 0)
-        buttons_layout.setSpacing(10)
-        self.btn_ok = QPushButton("LAUNCH GAME")
+        self.btn_ok = QPushButton(" INICIAR JOGO ")
         self.btn_ok.setObjectName("LaunchBtn")
-        self.btn_ok.setFixedHeight(50)
-        self.btn_cancel = QPushButton("EXIT")
-        self.btn_cancel.setObjectName("ExitBtn")
-        self.btn_cancel.setFixedHeight(40)
-        
+        self.btn_ok.setFixedHeight(36)
+        self.btn_ok.setMinimumWidth(140)
         self.btn_ok.clicked.connect(self.launch_game)
+        
+        self.btn_cancel = QPushButton(" SAIR ")
+        self.btn_cancel.setObjectName("ExitBtn")
+        self.btn_cancel.setFixedHeight(36)
+        self.btn_cancel.setFixedWidth(80)
         self.btn_cancel.clicked.connect(self.close)
         
-        buttons_layout.addWidget(self.btn_ok)
-        buttons_layout.addWidget(self.btn_cancel)
-        content_layout.addLayout(buttons_layout)
+        content_layout.addWidget(email_container)
+        content_layout.addWidget(pass_container)
+        content_layout.addWidget(self.input_server)
+        content_layout.addWidget(self.input_nick)
+        content_layout.addStretch()
+        content_layout.addWidget(self.btn_ok)
+        content_layout.addWidget(self.btn_cancel)
+        content_layout.addWidget(self.input_color)
         
         card_layout.addWidget(content_widget)
 
