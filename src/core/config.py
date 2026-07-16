@@ -16,6 +16,9 @@ def get_app_data_dir():
 def get_cache_dir(safe_email):
     return os.path.join(get_app_data_dir(), "cache", safe_email)
 
+def get_shared_cache_dir():
+    return os.path.join(get_app_data_dir(), "cache", "shared_assets")
+
 LOGIN_JS_SCRIPT = """
 setTimeout(function() {{
     var emailInput = document.querySelector('input[type="email"]') || document.querySelector('input[name="email"]') || document.querySelector('input[name="login"]') || document.querySelector('input[name="account"]') || document.querySelector('input[name="username"]') || document.querySelector('input[type="text"]');

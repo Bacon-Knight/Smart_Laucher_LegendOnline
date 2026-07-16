@@ -21,7 +21,13 @@ O **Legend Online Custom Launcher** foi desenvolvido com o propósito de substit
 A verdadeira genialidade deste Launcher está no fato de ele não usar o "mouse do sistema operacional" para enviar macros. As Macros disparam pacotes diretamente para a renderização interna da página. Isso significa que **os macros funcionam com o jogo minimizado**!
 
 1. **AutoClicker Fantasma (F4):** Deixe farmando dezenas de instâncias num local da tela. A cada 1s o motor clica no X/Y predefinido de forma invisível.
-2. **Formação Mágica (Macro 5x5):** Um mini-robô autônomo baseado em Geometria Isométrica. Com 1 clique no centro de um tabuleiro, ele mapeia 25 pontos e dispara golpes cadenciados (respeitando o delay de combate de X segundos que você escolhe) na sequência exata de vitória.
+2. **Formação Mágica (Macro 5x5):** Um mini-robô autônomo baseado em Geometria Isométrica. Com 1 clique no centro de um tabuleiro, ele mapeia 25 pontos e dispara golpes cadenciados.
+3. **Gravador de Macro Customizável (F7/F8):** Você pode gravar seus próprios cliques e teclas do teclado em tempo real apertando F7. Ele salva os atrasos (delays) milimetricamente e você dá play na automação apertando F8. Funciona com a janela minimizada!
+4. **Auto-Luta (F5):** Um algoritmo de visão computacional varre pixels específicos na tela para detectar botões laranjas/vermelhos e engaja no combate automaticamente.
+
+## 🕵️‍♂️ Modo Furtivo & Privacidade Total
+O Launcher foi pensado para você jogar onde quiser com privacidade:
+- **Minimização Stealth:** Ao minimizar a tela (ou apertar `Ctrl+Shift+A`, ou passar 90 segundos sem tocar no mouse), a janela do jogo DESAPARECE completamente da Barra de Tarefas e vai parar em formato minúsculo silenciado lá no *System Tray* (bandeja do relógio do Windows), rodando com o icone do Bacon Knight. Ninguém vai ver que o jogo está aberto.
 
 ## 🛠️ Ferramentas & Guias In-Game
 O Launcher possui um pequeno botão de Ferramentas (`🛠`) na borda da janela. Nele, você pode acessar:
@@ -38,18 +44,18 @@ O projeto foi completamente refatorado e separado em módulos dentro da pasta `s
 - **`src/ui/`**: A interface e seus componentes. Conta com uma classe base inteligente (`FramelessWindowMixin`) que garante sombras, cantos arredondados e ativa o recurso *Snap Layouts* (Auto-Tile) de forma nativa no Windows!
 
 ## 💻 Instalação & Compilação
-Se você é um jogador final, basta baixar o executável e colocar na mesma pasta do seu `pepflashplayer.dll`.
+Se você é um jogador final, basta baixar **ÚNICO executável** gerado. Diferente das versões antigas, o `pepflashplayer.dll` agora é embutido diretamente dentro do EXE, tornando-o um sistema *Standalone* Portátil!
 
 Se você for modificar o código:
 ### Requisitos
 - Python 3.x
-- Pacotes instalados: `pip install PyQt5 PyQtWebEngine pyinstaller`
+- Pacotes instalados: `pip install PyQt5 PyQtWebEngine pyinstaller pillow`
 - O arquivo nativo `pepflashplayer.dll` na raiz do projeto (versão PPAPI 32.0.0.371)
-- O arquivo `style.qss` customizado
+- O ícone customizado `bacon_knight.ico`
 
-### Como compilar para `.exe` portátil
+### Como compilar para `.exe` Standalone (Tudo em Um)
 ```bash
-pyinstaller --noconsole --onefile --add-data "style.qss;." launcher.py
+pyinstaller --noconsole --onefile --icon="bacon_knight.ico" --add-data "style.qss;." --add-data "pepflashplayer.dll;." --name "LegendOnlineLauncher_v2.1" launcher.py
 ```
 
 ## 🧠 Para Inteligências Artificiais e IDEs (Copilot, Cursor)

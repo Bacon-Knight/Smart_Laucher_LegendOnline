@@ -1,12 +1,13 @@
 import os
+import time
 import json
 from PyQt5.QtCore import Qt, QUrl, QSettings, QTimer, QPoint, QCoreApplication, QEvent
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QMessageBox, QShortcut
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QMessageBox, QShortcut, QSystemTrayIcon, QMenu, QAction
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings, QWebEngineProfile, QWebEnginePage
 from PyQt5.QtGui import QColor, QFont, QCursor, QMouseEvent, QPixmap, QIcon, QPainter, QKeySequence
 
 from src.core.logger import get_logger
-from src.core.config import get_cache_dir, LOGIN_JS_SCRIPT, BRIGHT_COLORS
+from src.core.config import get_cache_dir, get_shared_cache_dir, LOGIN_JS_SCRIPT, BRIGHT_COLORS
 from src.core.macros import MacroWorker
 from src.ui.components.frameless import FramelessWindowMixin
 from src.ui.components.title_bar import CustomTitleBar
@@ -55,6 +56,35 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
         painter.end()
         self.setWindowIcon(QIcon(pixmap))
         
+        self.tray_icon = QSystemTrayIcon(self)
+        self.tray_icon.setIcon(QIcon(pixmap))
+        tray_menu = QMenu()
+        restore_action = QAction("Restaurar", self)
+        restore_action.triggered.connect(self.restore_from_tray)
+        quit_action = QAction("Fechar Conta", self)
+        quit_action.triggered.connect(self.close)
+        tray_menu.addAction(restore_action)
+        tray_menu.addAction(quit_action)
+        self.tray_icon.setContextMenu(tray_menu)
+        self.tray_icon.activated.connect(self.tray_icon_activated)
+
+        self.idle_timer = QTimer(self)
+        self.idle_timer.timeout.connect(self.hide_to_tray)
+        self.idle_timer.start(90000)
+        
+        self.shortcut_hide = QShortcut(QKeySequence("Ctrl+Shift+A"), self)
+        self.shortcut_hide.activated.connect(self.hide_to_tray)
+        
+        self.is_recording_macro = False
+        self.recorded_macro_events = []
+        self.macro_start_time = 0
+        self.shortcut_record = QShortcut(QKeySequence("F7"), self)
+        self.shortcut_record.activated.connect(self.toggle_record_macro)
+        self.shortcut_play = QShortcut(QKeySequence("F8"), self)
+        self.shortcut_play.activated.connect(self.play_custom_macro)
+        
+        self.installEventFilter(self)
+        
         self.browser = QWebEngineView()
         main_layout.addWidget(self.browser)
         
@@ -83,7 +113,8 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
         
         if enable_cache:
             cache_dir = get_cache_dir(safe_email)
-            self.profile.setCachePath(cache_dir)
+            shared_cache_dir = get_shared_cache_dir()
+            self.profile.setCachePath(shared_cache_dir)
             self.profile.setPersistentStoragePath(cache_dir)
             self.profile.setPersistentCookiesPolicy(QWebEngineProfile.ForcePersistentCookies)
             self.profile.setHttpCacheType(QWebEngineProfile.DiskHttpCache)
@@ -250,12 +281,93 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
         if ok and self.email and self.password:
             js = LOGIN_JS_SCRIPT.format(email_json=json.dumps(self.email), password_json=json.dumps(self.password))
             self.page.runJavaScript(js)
+            
+            proxy = self.browser.focusProxy()
+            if proxy:
+                proxy.installEventFilter(self)
 
     def nativeEvent(self, eventType, message):
         handled, result = self.frameless_native_event(eventType, message)
         if handled:
             return True, result
         return super().nativeEvent(eventType, message)
+
+    def tray_icon_activated(self, reason):
+        if reason == QSystemTrayIcon.DoubleClick or reason == QSystemTrayIcon.Trigger:
+            self.restore_from_tray()
+
+    def hide_to_tray(self):
+        self.hide()
+        self.tray_icon.show()
+
+    def restore_from_tray(self):
+        self.showNormal()
+        self.activateWindow()
+        self.tray_icon.hide()
+        self.idle_timer.start(90000)
+
+    def changeEvent(self, event):
+        if event.type() == QEvent.WindowStateChange:
+            if self.isMinimized():
+                QTimer.singleShot(0, self.hide_to_tray)
+                event.ignore()
+                return
+        super().changeEvent(event)
+
+    def eventFilter(self, obj, event):
+        if event.type() in (QEvent.MouseMove, QEvent.MouseButtonPress, QEvent.KeyPress):
+            self.idle_timer.start(90000)
+            
+        if self.is_recording_macro:
+            if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease, QEvent.KeyPress, QEvent.KeyRelease):
+                elapsed = time.time() - self.macro_start_time
+                event_data = None
+                
+                if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease):
+                    event_data = {
+                        'type': event.type(),
+                        'pos': event.pos(),
+                        'button': event.button(),
+                        'modifiers': event.modifiers()
+                    }
+                elif event.type() in (QEvent.KeyPress, QEvent.KeyRelease):
+                    event_data = {
+                        'type': event.type(),
+                        'key': event.key(),
+                        'modifiers': event.modifiers(),
+                        'text': event.text(),
+                        'autorepeat': event.isAutoRepeat(),
+                        'count': event.count()
+                    }
+                    
+                if event_data:
+                    self.recorded_macro_events.append((elapsed, event_data))
+                    
+        return super().eventFilter(obj, event)
+
+    def toggle_record_macro(self):
+        if not self.is_recording_macro:
+            self.is_recording_macro = True
+            self.recorded_macro_events = []
+            self.macro_start_time = time.time()
+            self.title_bar.title.setText("🔴 GRAVANDO MACRO... (F7 para parar)")
+        else:
+            self.is_recording_macro = False
+            self.title_bar.title.setText(f"✅ MACRO SALVO! ({len(self.recorded_macro_events)} eventos)")
+            QTimer.singleShot(2000, lambda: self.title_bar.title.setText(f"Legend Online - Jogando como: {self.nick or self.email}"))
+
+    def play_custom_macro(self):
+        if not self.recorded_macro_events:
+            return
+        self.stop_macros()
+        self.macro_type = 'custom'
+        self.title_bar.title.setText("▶️ TOCANDO MACRO... (F4 para parar)")
+        target_widget = self.browser.focusProxy() if self.browser.focusProxy() else self.browser
+        params = {'queue': self.recorded_macro_events}
+        self.macro_worker = MacroWorker(target_widget, 'custom', params)
+        self.macro_worker.status_update.connect(self.title_bar.title.setText)
+        self.macro_worker.finished.connect(self.stop_macros)
+        self.macro_worker.start()
 
     def resizeEvent(self, event):
         base_width = 1040.0
@@ -276,6 +388,7 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
             try:
                 if hasattr(self, 'page') and self.page: self.page.deleteLater()
                 if hasattr(self, 'profile') and self.profile: self.profile.deleteLater()
+                if hasattr(self, 'browser') and self.browser: self.browser.deleteLater()
             except Exception as e:
                 logger.error(f"Erro ao limpar forçado: {e}")
             event.accept()
@@ -289,6 +402,7 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
             try:
                 if hasattr(self, 'page') and self.page: self.page.deleteLater()
                 if hasattr(self, 'profile') and self.profile: self.profile.deleteLater()
+                if hasattr(self, 'browser') and self.browser: self.browser.deleteLater()
             except Exception as e:
                 logger.error(f"Erro ao limpar: {e}")
             event.accept()

@@ -1,10 +1,9 @@
 import json
 import ctypes
 from ctypes import wintypes
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QComboBox, QLineEdit, QSystemTrayIcon, QMenu, QAction, QMessageBox, QGraphicsDropShadowEffect, QStyle, QApplication
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QComboBox, QLineEdit, QSystemTrayIcon, QMenu, QAction, QMessageBox, QGraphicsDropShadowEffect, QStyle, QApplication, QShortcut
 from PyQt5.QtCore import Qt, QSettings, QPoint, QObject, QTimer
 from PyQt5.QtGui import QColor, QKeySequence
-from PyQt5.QtWidgets import QShortcut
 
 from src.core.logger import get_logger
 from src.core.config import resource_path, COLOR_MAP, COLOR_ORDER

@@ -39,7 +39,14 @@ O jogo tem um minigame 5x5 desenhado em perspectiva isométrica. Ao invés de us
   ```
 - Executamos os cliques no Background utilizando uma Fila (`QTimer`) respeitando tempos de combate.
 
-### E. Otimizações Extremas do Chromium (Flags)
+### D. Automações de Visão (Auto-Luta)
+Para cenários imprevisíveis, o sistema lê a tela (pixels convertidos do QPixmap) procurando padrões de cor (botões vermelhos/dourados). Isso é um contorno excelente pois não exige Tesseract (OCR) pesado ou Yolo. O mapeamento é feito por amostragem de pixels na área direita-inferior.
+
+### E. Modo Stealth e Garbage Collection
+Devido ao jogo ficar em background, ao acionar `Ctrl+Shift+A` ou passar de 90s inativo, escondemos a tela inteira e deixamos apenas um `QSystemTrayIcon` com o icone do Bacon Knight rodando.
+Na hora do fechamento, para matar os sub-processos Chromium mortos do Windows, o `closeEvent` chama explicitamente o `.deleteLater()` do Profile, da Page e do QWebEngineView. Isso mata vazamentos massivos de memória de Multi-Boxing.
+
+### F. Otimizações Extremas do Chromium (Flags)
 As flags passadas no `sys.argv` (ver bloco final de `launcher.py`) desativam serviços do Chrome desnecessários (sync, print, rasterization via CPU). Isso corta o uso de memória do WebEngine quase pela metade.
 
 ## 4. O Futuro (O que você pode fazer se solicitado)

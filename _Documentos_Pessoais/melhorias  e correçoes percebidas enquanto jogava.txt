@@ -1,0 +1,1 @@
+depois da ultima versão os carregamentos estão muito lentos. teria como salvar os carregamentos antigos em uma pasta compartilhada entre qualquer conta que eu entre, digo cache arquivos etc.. e não logins

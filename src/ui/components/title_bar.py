@@ -7,8 +7,8 @@ class CustomTitleBar(QWidget):
         self.parent = parent
         self.is_game_window = is_game_window
         self.layout = QHBoxLayout(self)
-        self.layout.setContentsMargins(15, 0, 10, 0)
-        self.setFixedHeight(40)
+        self.layout.setContentsMargins(8, 0, 8, 0)
+        self.setFixedHeight(18)
         
         self.title = QLabel("Launcher By Bacon Knight")
         self.title.setObjectName("TitleLabel")
@@ -17,7 +17,7 @@ class CustomTitleBar(QWidget):
         
         if self.is_game_window:
             self.btn_tools = QPushButton("🛠")
-            self.btn_tools.setFixedSize(30, 30)
+            self.btn_tools.setFixedSize(18, 18)
             self.btn_tools.setObjectName("TitleBtn")
             self.btn_tools.setToolTip("Ferramentas e Macros")
             
@@ -53,25 +53,25 @@ class CustomTitleBar(QWidget):
             self.btn_tools.setMenu(self.tool_menu)
             
             self.btn_mute = QPushButton("🔊")
-            self.btn_mute.setFixedSize(30, 30)
+            self.btn_mute.setFixedSize(18, 18)
             self.btn_mute.setObjectName("TitleBtn")
             self.btn_mute.setToolTip("Mutar/Desmutar Som da Aba")
             self.btn_mute.clicked.connect(self.parent.toggle_mute)
             
             self.btn_relog = QPushButton("🔄")
-            self.btn_relog.setFixedSize(30, 30)
+            self.btn_relog.setFixedSize(18, 18)
             self.btn_relog.setObjectName("TitleBtn")
             self.btn_relog.setToolTip("Recarregar Página")
             self.btn_relog.clicked.connect(self.parent.relog)
             
             self.btn_cache = QPushButton("🧹")
-            self.btn_cache.setFixedSize(30, 30)
+            self.btn_cache.setFixedSize(18, 18)
             self.btn_cache.setObjectName("TitleBtn")
             self.btn_cache.setToolTip("Limpar Cache desta Conta")
             self.btn_cache.clicked.connect(self.parent.clear_cache)
             
             self.btn_tray = QPushButton("🔽")
-            self.btn_tray.setFixedSize(30, 30)
+            self.btn_tray.setFixedSize(18, 18)
             self.btn_tray.setObjectName("TitleBtn")
             self.btn_tray.setToolTip("Ocultar na Bandeja (System Tray)")
             self.btn_tray.clicked.connect(self.parent.hide)
@@ -87,17 +87,17 @@ class CustomTitleBar(QWidget):
             self.layout.addWidget(spacer)
         
         self.btn_minimize = QPushButton("—")
-        self.btn_minimize.setFixedSize(30, 30)
+        self.btn_minimize.setFixedSize(18, 18)
         self.btn_minimize.setObjectName("TitleBtn")
         self.btn_minimize.clicked.connect(self.parent.showMinimized)
         
         self.btn_maximize = QPushButton("🗖")
-        self.btn_maximize.setFixedSize(30, 30)
+        self.btn_maximize.setFixedSize(18, 18)
         self.btn_maximize.setObjectName("TitleBtn")
         self.btn_maximize.clicked.connect(self.toggle_maximize)
         
         self.btn_close = QPushButton("✕")
-        self.btn_close.setFixedSize(30, 30)
+        self.btn_close.setFixedSize(18, 18)
         self.btn_close.setObjectName("TitleBtnClose")
         self.btn_close.clicked.connect(self.parent.close)
         

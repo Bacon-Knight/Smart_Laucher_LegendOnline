@@ -22,6 +22,8 @@ class MacroWorker(QThread):
             self.run_formacao()
         elif self.macro_type == 'autoluta':
             self.run_autoluta()
+        elif self.macro_type == 'custom':
+            self.run_custom_macro()
             
     def run_autoclicker(self):
         pos = self.params.get('pos')
@@ -76,6 +78,51 @@ class MacroWorker(QThread):
             self.send_click(pos)
             
         time.sleep(1.0)
+        self.finished.emit()
+
+    def run_custom_macro(self):
+        queue = self.params.get('queue', [])
+        last_time = 0
+        
+        while self.is_running:
+            for elapsed, event_data in queue:
+                if not self.is_running:
+                    break
+                
+                wait_time = elapsed - last_time
+                if wait_time > 0:
+                    steps = int(wait_time * 10)
+                    rem = wait_time - (steps * 0.1)
+                    for _ in range(steps):
+                        if not self.is_running:
+                            break
+                        time.sleep(0.1)
+                    if self.is_running and rem > 0:
+                        time.sleep(rem)
+                        
+                if not self.is_running:
+                    break
+                    
+                etype = event_data['type']
+                if etype in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease):
+                    btn = event_data['button']
+                    pos = event_data['pos']
+                    mods = event_data['modifiers']
+                    event = QMouseEvent(etype, pos, pos, btn, btn, mods)
+                    QCoreApplication.postEvent(self.target_widget, event)
+                elif etype in (QEvent.KeyPress, QEvent.KeyRelease):
+                    key = event_data['key']
+                    mods = event_data['modifiers']
+                    text = event_data.get('text', '')
+                    autorepeat = event_data.get('autorepeat', False)
+                    count = event_data.get('count', 1)
+                    event = QKeyEvent(etype, key, mods, text, autorepeat, count)
+                    QCoreApplication.postEvent(self.target_widget, event)
+                    
+                last_time = elapsed
+                
+            last_time = 0
+            
         self.finished.emit()
         
     def send_click(self, pos):
