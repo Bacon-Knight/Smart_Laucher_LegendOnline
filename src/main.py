@@ -1,6 +1,8 @@
 import sys
 import os
+import ctypes
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWebEngineWidgets import QWebEngineSettings
 
 from src.core.logger import get_logger
@@ -24,7 +26,18 @@ def main():
     sys.argv.append("--disable-logging")
     sys.argv.append("--disable-gpu-memory-buffer-video-frames")
 
+    try:
+        myappid = 'baconknight.legendonline.launcher.v2'
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    except:
+        pass
+
     app = QApplication(sys.argv)
+    
+    icon_path = resource_path("bacon_knight.ico")
+    if os.path.exists(icon_path):
+        app.setWindowIcon(QIcon(icon_path))
+        
     QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
 
     window = LauncherHub()

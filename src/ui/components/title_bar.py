@@ -10,6 +10,16 @@ class CustomTitleBar(QWidget):
         self.layout.setContentsMargins(8, 0, 8, 0)
         self.setFixedHeight(18)
         
+        import os
+        from PyQt5.QtGui import QIcon, QPixmap
+        from src.core.config import resource_path
+        
+        icon_path = resource_path("bacon_knight.ico")
+        if os.path.exists(icon_path):
+            self.icon_label = QLabel()
+            self.icon_label.setPixmap(QIcon(icon_path).pixmap(16, 16))
+            self.layout.addWidget(self.icon_label)
+
         self.title = QLabel("Launcher By Bacon Knight")
         self.title.setObjectName("TitleLabel")
         self.layout.addWidget(self.title)
