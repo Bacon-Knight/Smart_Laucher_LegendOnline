@@ -1,0 +1,2 @@
+# Teste de Conexão - Bacon Knight
+Este arquivo foi criado apenas para validar se o usuário configurado no terminal está conseguindo fazer push corretamente para o novo repositório `Smart_Laucher_LegendOnline`.
