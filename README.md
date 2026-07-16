@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="https://via.placeholder.com/150/482963/FFFFFF?text=Legend+Launcher" alt="Logo" width="120" />
-  <h1>Legend Online - Custom Launcher Otimizado</h1>
+  <img src="docs/assets/logo.png" alt="Logo Bacon Knight" width="150" />
+  <h1>Legend Online - Bacon Knight Launcher</h1>
   <p><strong>Desenvolvido com Foco Extremo em Performance, Multi-Boxing e Macros Background</strong></p>
 </div>
 
