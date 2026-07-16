@@ -21,3 +21,7 @@ __pycache__/
 # Binários grandes e Caches Chromium
 *.exe
 cache/
+
+# Pastas Pessoais e Backups
+_Documentos_Pessoais/
+__Old/
