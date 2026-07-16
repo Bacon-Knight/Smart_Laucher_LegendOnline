@@ -1,0 +1,279 @@
+:root {
+    /* Color Palette */
+    --bg-dark: #0f0f13;
+    --card-bg: rgba(25, 25, 32, 0.6);
+    --card-border: rgba(255, 255, 255, 0.05);
+    
+    --text-primary: #f2f2f5;
+    --text-secondary: #9ea0b3;
+    
+    --gold: #f5b041;
+    --orange: #dc7633;
+    --red: #c0392b;
+    --purple: #8e44ad;
+    
+    --gradient-primary: linear-gradient(135deg, var(--gold) 0%, var(--orange) 100%);
+    --gradient-glow: linear-gradient(135deg, var(--orange) 0%, var(--red) 100%);
+    
+    --font-main: 'Outfit', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    line-height: 1.6;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Background Ambient Glow */
+.background-glow {
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    width: 50vw;
+    height: 50vw;
+    background: radial-gradient(circle, rgba(220, 118, 51, 0.15) 0%, transparent 60%);
+    z-index: -1;
+}
+.background-glow-secondary {
+    position: absolute;
+    bottom: -10%;
+    right: -10%;
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, rgba(142, 68, 173, 0.1) 0%, transparent 60%);
+    z-index: -1;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Hero Section */
+.hero {
+    text-align: center;
+    padding: 6rem 1rem 4rem;
+    max-width: 800px;
+}
+
+.logo-container {
+    margin-bottom: 2rem;
+}
+
+.logo {
+    width: 180px;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+    animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
+}
+
+.title {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    line-height: 1.1;
+}
+
+.highlight {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+
+.subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    margin-bottom: 3rem;
+}
+
+/* Buttons */
+.cta-group {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    color: #fff;
+    box-shadow: 0 10px 25px rgba(220, 118, 51, 0.4);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(220, 118, 51, 0.6);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-3px);
+}
+
+/* Glassmorphism Cards */
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    width: 100%;
+    margin: 4rem 0;
+}
+
+.glass-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    padding: 2.5rem;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 100%;
+    background: var(--gradient-glow);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: -1;
+}
+
+.glass-card:hover {
+    transform: translateY(-10px);
+    border-color: rgba(245, 176, 65, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.glass-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #fff;
+}
+
+.glass-card p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+/* Support Section */
+.support {
+    width: 100%;
+    margin-bottom: 4rem;
+}
+
+.support-card {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+}
+
+.support-card h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: var(--gradient-glow);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.support-card p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    max-width: 600px;
+    margin-inline: auto;
+}
+
+.btn-donate {
+    background: var(--red);
+    color: #fff;
+    box-shadow: 0 10px 25px rgba(192, 57, 43, 0.4);
+}
+
+.btn-donate:hover {
+    background: #e74c3c;
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(192, 57, 43, 0.6);
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    border-top: 1px solid var(--card-border);
+    width: 100%;
+}
+
+footer a {
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .title {
+        font-size: 2.8rem;
+    }
+    
+    .cta-group {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
