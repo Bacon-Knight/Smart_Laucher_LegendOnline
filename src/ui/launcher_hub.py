@@ -74,6 +74,7 @@ class LauncherHub(QMainWindow):
         
         self.init_ui()
         self.load_styles()
+        QTimer.singleShot(1000, self.show_donation_popup)
 
     def setup_tray(self):
         self.tray_icon = QSystemTrayIcon(self)
@@ -371,3 +372,23 @@ class LauncherHub(QMainWindow):
         gw = GameWindow(email, password, url_completa, enable_cache, nick, bg_color)
         self.game_windows.append(gw)
         gw.show()
+
+    def show_donation_popup(self):
+        try:
+            msg = QMessageBox(self)
+            msg.setWindowTitle("Apoie o Projeto 🥓")
+            msg.setTextFormat(Qt.RichText)
+            msg.setTextInteractionFlags(Qt.TextBrowserInteraction)
+            msg.setText(
+                "<h3>Gostando do Bacon Knight Launcher? 🥓</h3>"
+                "<p>Este projeto é feito para a comunidade!<br>"
+                "Considere pagar um bacon para o desenvolvedor.</p>"
+                "<br><a href='https://Bacon-Knight.github.io/Smart_Laucher_LegendOnline/' style='color: #c9a444;'>👉 Clique aqui para visitar nosso site oficial e fazer uma doação anônima!</a><br><br>"
+            )
+            msg.setIcon(QMessageBox.Information)
+            msg.addButton("Entendido!", QMessageBox.AcceptRole)
+            
+            msg.setStyleSheet("QMessageBox { background-color: #120c18; color: white; } QLabel { color: white; } QPushButton { background-color: #2b1b3d; color: white; padding: 5px 15px; border: 1px solid #c9a444; border-radius: 4px; }")
+            msg.exec_()
+        except Exception as e:
+            logger.error(f"Erro no popup de doacao: {e}")
