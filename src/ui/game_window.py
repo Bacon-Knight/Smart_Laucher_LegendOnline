@@ -7,7 +7,7 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings, QWebEng
 from PyQt5.QtGui import QColor, QFont, QCursor, QMouseEvent, QPixmap, QIcon, QPainter, QKeySequence
 
 from src.core.logger import get_logger
-from src.core.config import get_cache_dir, get_shared_cache_dir, LOGIN_JS_SCRIPT, BRIGHT_COLORS
+from src.core.config import get_cache_dir, get_shared_cache_dir, LOGIN_JS_SCRIPT, BRIGHT_COLORS, resource_path
 from src.core.macros import MacroWorker
 from src.ui.components.frameless import FramelessWindowMixin
 from src.ui.components.title_bar import CustomTitleBar
