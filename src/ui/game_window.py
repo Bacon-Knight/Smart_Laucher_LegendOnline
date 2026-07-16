@@ -127,7 +127,6 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
         self.browser.setUrl(QUrl(server_url))
         
         try:
-            from src.core.config import resource_path
             with open(resource_path("style.qss"), "r") as f:
                 self.setStyleSheet(f.read())
         except Exception as e:
