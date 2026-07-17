@@ -1,6 +1,8 @@
 import json
 import ctypes
-from ctypes import wintypes
+import sys
+if sys.platform == 'win32':
+    from ctypes import wintypes
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QComboBox, QLineEdit, QSystemTrayIcon, QMenu, QAction, QMessageBox, QGraphicsDropShadowEffect, QStyle, QApplication, QShortcut
 from PyQt5.QtCore import Qt, QSettings, QPoint, QObject, QTimer
 from PyQt5.QtGui import QColor, QKeySequence
@@ -12,13 +14,16 @@ from src.ui.game_window import GameWindow
 
 logger = get_logger("LauncherHub")
 
-class LASTINPUTINFO(ctypes.Structure):
-    _fields_ = [
-        ("cbSize", wintypes.UINT),
-        ("dwTime", wintypes.DWORD)
-    ]
+if sys.platform == 'win32':
+    class LASTINPUTINFO(ctypes.Structure):
+        _fields_ = [
+            ("cbSize", wintypes.UINT),
+            ("dwTime", wintypes.DWORD)
+        ]
 
 def get_system_idle_time_ms():
+    if sys.platform != 'win32':
+        return 0
     lii = LASTINPUTINFO()
     lii.cbSize = ctypes.sizeof(LASTINPUTINFO)
     if ctypes.windll.user32.GetLastInputInfo(ctypes.byref(lii)):

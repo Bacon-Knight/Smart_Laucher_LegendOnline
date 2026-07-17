@@ -13,7 +13,10 @@ def main():
     logger = get_logger("Main")
     logger.info("Iniciando o Launcher Legend Online...")
     
-    plugin_path = resource_path("pepflashplayer.dll")
+    if sys.platform == 'win32':
+        plugin_path = resource_path("pepflashplayer.dll")
+    else:
+        plugin_path = resource_path("libpepflashplayer.so")
 
     sys.argv.append(f"--ppapi-flash-path={plugin_path}")
     sys.argv.append("--ppapi-flash-version=32.0.0.371") 
@@ -26,11 +29,12 @@ def main():
     sys.argv.append("--disable-logging")
     sys.argv.append("--disable-gpu-memory-buffer-video-frames")
 
-    try:
-        myappid = 'baconknight.legendonline.launcher.v2'
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-    except:
-        pass
+    if sys.platform == 'win32':
+        try:
+            myappid = 'baconknight.legendonline.launcher.v2'
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        except:
+            pass
 
     app = QApplication(sys.argv)
     

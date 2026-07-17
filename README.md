@@ -55,7 +55,7 @@ Se você for modificar o código:
 
 ### Como compilar para `.exe` Standalone (Tudo em Um)
 ```bash
-pyinstaller --noconsole --onefile --icon="bacon_knight.ico" --add-data "style.qss;." --add-data "pepflashplayer.dll;." --name "LegendOnlineLauncher_v2.1" launcher.py
+pyinstaller --noconsole --onefile --icon="bacon_knight.ico" --add-data "style.qss;." --add-data "pepflashplayer.dll;." --add-data "Ferramentas;Ferramentas" --add-data "bacon_knight.ico;." --name "LegendOnlineLauncher_v2.1" launcher.py
 ```
 
 ## 🧠 Para Inteligências Artificiais e IDEs (Copilot, Cursor)

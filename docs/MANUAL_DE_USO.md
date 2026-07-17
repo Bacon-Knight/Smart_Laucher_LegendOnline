@@ -30,6 +30,15 @@ Cansado de clicar para coletar ouro ou treinar montaria?
 5. **A Magia:** Você pode minimizar a janela do jogo e ir ver Netflix! O clicker do Bacon Knight injeta o clique direto no motor do jogo (background), ou seja, ele continua clicando mesmo escondido!
 6. Para parar o Macro, basta clicar em "Parar Macro" na barra superior.
 
+### 🎬 Gravando e Salvando Macros Customizados
+Você também pode gravar uma sequência de ações (cliques) para o Launcher repetir:
+1. Aperte a tecla **F7** para começar a gravar. O título da janela mudará para "🔴 GRAVANDO MACRO...".
+2. Faça os cliques que deseja no jogo.
+3. Aperte **F7** novamente para encerrar a gravação. O título mostrará "✅ MACRO SALVO!".
+4. Para reproduzir o macro que você acabou de salvar, aperte a tecla **F8**.
+5. Para interromper a reprodução a qualquer momento, aperte a tecla **F4**.
+
+
 ## 🔇 5. Mudo Automático
 O Launcher já abre o jogo **Mudo** por padrão para não te dar sustos com a música alta do Legend Online se você abrir 10 contas de uma vez.
 - Para ouvir o som do jogo, basta clicar no botão de **Alto-falante (🔇)** na barra de título da janela.

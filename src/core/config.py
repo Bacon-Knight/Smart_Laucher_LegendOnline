@@ -10,7 +10,10 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 def get_app_data_dir():
-    app_data_path = os.getenv('LOCALAPPDATA') or os.path.expanduser('~')
+    if sys.platform == 'win32':
+        app_data_path = os.getenv('LOCALAPPDATA') or os.path.expanduser('~')
+    else:
+        app_data_path = os.getenv('XDG_DATA_HOME') or os.path.join(os.path.expanduser('~'), '.local', 'share')
     return os.path.join(app_data_path, "LegendOnlineLauncher")
 
 def get_cache_dir(safe_email):

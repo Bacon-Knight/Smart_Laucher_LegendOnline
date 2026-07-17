@@ -3,6 +3,9 @@ from PyQt5.QtWidgets import QPushButton
 
 class FramelessWindowMixin:
     def enable_windows_snap(self):
+        import sys
+        if sys.platform != 'win32':
+            return
         try:
             import ctypes
             HWND = self.winId().__int__()
@@ -15,6 +18,9 @@ class FramelessWindowMixin:
             pass
 
     def frameless_native_event(self, eventType, message, title_bar_height=40):
+        import sys
+        if sys.platform != 'win32':
+            return False, 0
         try:
             if eventType == b"windows_generic_MSG":
                 import ctypes
