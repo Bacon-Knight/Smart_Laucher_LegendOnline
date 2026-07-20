@@ -3,9 +3,9 @@ import ctypes
 import sys
 if sys.platform == 'win32':
     from ctypes import wintypes
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QComboBox, QLineEdit, QSystemTrayIcon, QMenu, QAction, QMessageBox, QGraphicsDropShadowEffect, QStyle, QApplication, QShortcut
-from PyQt5.QtCore import Qt, QSettings, QPoint, QObject, QTimer
-from PyQt5.QtGui import QColor, QKeySequence
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QComboBox, QLineEdit, QSystemTrayIcon, QMenu, QAction, QMessageBox, QGraphicsDropShadowEffect, QStyle, QApplication, QShortcut, QCheckBox, QScrollArea, QFrame
+from PyQt5.QtCore import Qt, QSettings, QPoint, QObject, QTimer, QUrl
+from PyQt5.QtGui import QColor, QKeySequence, QDesktopServices
 
 from src.core.logger import get_logger
 from src.core.config import resource_path, COLOR_MAP, COLOR_ORDER
@@ -42,6 +42,10 @@ class AFKManager(QObject):
         self.check_timer.start(5000) # Checa a cada 5 segundos
 
     def check_state(self):
+        if not self.hub.settings.value("afk_enabled", True, type=bool):
+            self.inactive_ms = 0
+            return
+
         app = QApplication.instance()
         is_app_focused = app.activeWindow() is not None
         sys_idle = get_system_idle_time_ms()
@@ -63,6 +67,7 @@ class LauncherHub(QMainWindow):
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setGeometry(100, 100, 1100, 80)
+        self._grid_visible = False
         
         self.settings = QSettings("CustomLauncher", "LegendOnline")
         self.game_windows = []
@@ -79,7 +84,8 @@ class LauncherHub(QMainWindow):
         
         self.init_ui()
         self.load_styles()
-        QTimer.singleShot(1000, self.show_donation_popup)
+        QTimer.singleShot(600, self.check_previous_crash)
+        QTimer.singleShot(1200, self.show_donation_popup)
 
     def setup_tray(self):
         self.tray_icon = QSystemTrayIcon(self)
@@ -221,8 +227,8 @@ class LauncherHub(QMainWindow):
         self.btn_accounts = QPushButton("📋")
         self.btn_accounts.setObjectName("TogglePassBtn") 
         self.btn_accounts.setFixedSize(30, 30)
-        self.btn_accounts.setToolTip("Contas Salvas")
-        self.btn_accounts.clicked.connect(self.show_accounts_menu)
+        self.btn_accounts.setToolTip("Mostrar/ocultar painel de contas salvas")
+        self.btn_accounts.clicked.connect(self.toggle_accounts_grid)
         
         email_layout.addWidget(self.input_email)
         email_layout.addWidget(self.btn_accounts)
@@ -257,8 +263,11 @@ class LauncherHub(QMainWindow):
         self.input_nick.setText(current_acc.get("nick", ""))
         self.input_nick.setFixedWidth(120)
         
-        self.input_color = QComboBox()
-        self.input_color.hide()
+        self.chk_afk = QCheckBox("Modo Oculto")
+        self.chk_afk.setToolTip("Oculta o jogo após 2 min de inatividade (Modo Chefe)")
+        self.chk_afk.setStyleSheet("color: white;")
+        self.chk_afk.setChecked(self.settings.value("afk_enabled", True, type=bool))
+        self.chk_afk.stateChanged.connect(self.on_afk_changed)
         
         self.btn_ok = QPushButton(" INICIAR JOGO ")
         self.btn_ok.setObjectName("LaunchBtn")
@@ -279,11 +288,157 @@ class LauncherHub(QMainWindow):
         content_layout.addStretch()
         content_layout.addWidget(self.btn_ok)
         content_layout.addWidget(self.btn_cancel)
-        content_layout.addWidget(self.input_color)
+        content_layout.addWidget(self.chk_afk)
         
         card_layout.addWidget(content_widget)
 
+        # ── Grid de Contas (colapsável) ──────────────────────────────
+        self.accounts_grid_container = QWidget()
+        self.accounts_grid_container.setVisible(False)
+
+        grid_outer = QVBoxLayout(self.accounts_grid_container)
+        grid_outer.setContentsMargins(12, 4, 12, 8)
+        grid_outer.setSpacing(0)
+
+        sep = QFrame()
+        sep.setFrameShape(QFrame.HLine)
+        sep.setStyleSheet("color: #351554;")
+        grid_outer.addWidget(sep)
+
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFixedHeight(160)
+        self.scroll_area.setStyleSheet(
+            "QScrollArea { border: none; background: transparent; }"
+            "QScrollBar:horizontal { height: 6px; background: #1e1526; }"
+            "QScrollBar::handle:horizontal { background: #482963; border-radius: 3px; }"
+        )
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        self.scroll_content = QWidget()
+        self.scroll_content.setStyleSheet("background: transparent;")
+        self.scroll_layout = QHBoxLayout(self.scroll_content)
+        self.scroll_layout.setContentsMargins(0, 6, 0, 4)
+        self.scroll_layout.setSpacing(8)
+        self.scroll_layout.addStretch()
+
+        self.scroll_area.setWidget(self.scroll_content)
+        grid_outer.addWidget(self.scroll_area)
+
+        card_layout.addWidget(self.accounts_grid_container)
+        self._refresh_accounts_grid()
+
+    def toggle_accounts_grid(self):
+        """Expande ou recolhe o painel de cartões de contas."""
+        self._grid_visible = not self._grid_visible
+        self.accounts_grid_container.setVisible(self._grid_visible)
+        if self._grid_visible:
+            self.setFixedHeight(260)
+            self._refresh_accounts_grid()
+        else:
+            self.setFixedHeight(80)
+        self.adjustSize()
+
+    def _refresh_accounts_grid(self):
+        """Reconstrói todos os cartões de conta no scroll horizontal."""
+        # Remove cartões antigos (preserva o stretch no final)
+        while self.scroll_layout.count() > 1:
+            item = self.scroll_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        if not self.saved_accounts:
+            lbl = QLabel("Nenhuma conta salva ainda.")
+            lbl.setStyleSheet("color: #666; font-size: 11px;")
+            self.scroll_layout.insertWidget(0, lbl)
+            return
+
+        for email, data in self.saved_accounts.items():
+            card = self._make_account_card(email, data)
+            self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, card)
+
+    def _make_account_card(self, email, data):
+        """Cria um cartão visual para uma conta."""
+        nick   = data.get("nick", "") or email.split("@")[0]
+        server = data.get("server", "?")
+        last   = data.get("last_login", "Nunca")
+
+        card = QWidget()
+        card.setFixedWidth(160)
+        card.setStyleSheet(
+            "QWidget { background-color: #1a1028; border: 1px solid #351554;"
+            " border-radius: 8px; }"
+            "QWidget:hover { border-color: #c9a444; }"
+        )
+
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(3)
+
+        lbl_nick = QLabel(nick[:18])
+        lbl_nick.setStyleSheet("color: #d9b855; font-weight: bold; font-size: 12px; border: none;")
+        lbl_nick.setAlignment(Qt.AlignCenter)
+
+        lbl_server = QLabel(f"Servidor {server}")
+        lbl_server.setStyleSheet("color: #a893c4; font-size: 10px; border: none;")
+        lbl_server.setAlignment(Qt.AlignCenter)
+
+        lbl_email = QLabel(email[:22] + ("…" if len(email) > 22 else ""))
+        lbl_email.setStyleSheet("color: #666; font-size: 9px; border: none;")
+        lbl_email.setAlignment(Qt.AlignCenter)
+        lbl_email.setToolTip(email)
+
+        lbl_last = QLabel(f"🕐 {last}")
+        lbl_last.setStyleSheet("color: #444; font-size: 9px; border: none;")
+        lbl_last.setAlignment(Qt.AlignCenter)
+
+        btn_enter = QPushButton("▶ Entrar")
+        btn_enter.setObjectName("LaunchBtn")
+        btn_enter.setFixedHeight(24)
+        btn_enter.setStyleSheet(
+            "QPushButton { background: #351554; border: 1px solid #c9a444;"
+            " border-radius: 5px; color: white; font-size: 10px; }"
+            "QPushButton:hover { background: #5c3285; }"
+        )
+        btn_enter.clicked.connect(lambda _, e=email, d=data: self._launch_from_card(e, d))
+
+        btn_del = QPushButton("✕")
+        btn_del.setFixedSize(20, 20)
+        btn_del.setStyleSheet(
+            "QPushButton { background: transparent; border: none; color: #482963; font-size: 10px; }"
+            "QPushButton:hover { color: #ff4d4d; }"
+        )
+        btn_del.clicked.connect(lambda _, e=email: self._delete_from_card(e))
+
+        top_row = QHBoxLayout()
+        top_row.addStretch()
+        top_row.addWidget(btn_del)
+        layout.addLayout(top_row)
+        layout.addWidget(lbl_nick)
+        layout.addWidget(lbl_server)
+        layout.addWidget(lbl_email)
+        layout.addWidget(lbl_last)
+        layout.addStretch()
+        layout.addWidget(btn_enter)
+
+        return card
+
+    def _launch_from_card(self, email, data):
+        """Preenche o formulário e lança o jogo diretamente pelo cartão."""
+        self.input_email.setCurrentText(email)
+        self.input_password.setText(data.get("password", ""))
+        self.input_server.setText(data.get("server", "1252"))
+        self.input_nick.setText(data.get("nick", ""))
+        self.launch_game()
+
+    def _delete_from_card(self, email):
+        """Exclui uma conta pelo botão no cartão."""
+        self.delete_account(email)
+        self._refresh_accounts_grid()
+
     def show_accounts_menu(self):
+
         menu = QMenu(self)
         menu.setStyleSheet("QMenu { background-color: #2b1b3d; color: white; border: 1px solid #c9a444; } QMenu::item:selected { background-color: #c9a444; color: black; }")
         
@@ -331,7 +486,9 @@ class LauncherHub(QMainWindow):
             self.input_password.setText(acc.get("password", ""))
             self.input_server.setText(acc.get("server", ""))
             self.input_nick.setText(acc.get("nick", ""))
-            self.input_color.setCurrentText(acc.get("color", "Padrão"))
+            
+    def on_afk_changed(self, state):
+        self.settings.setValue("afk_enabled", state == Qt.Checked)
             
     def toggle_password_visibility(self):
         if self.input_password.echoMode() == QLineEdit.Password:
@@ -355,20 +512,26 @@ class LauncherHub(QMainWindow):
             return
         
         if email:
+            import datetime
             self.saved_accounts[email] = {
                 "password": password,
                 "server": server_num,
                 "nick": self.input_nick.text().strip(),
-                "color": self.input_color.currentText()
+                "last_login": datetime.datetime.now().strftime("%d/%m %H:%M"),
             }
             self.settings.setValue("saved_accounts", json.dumps(self.saved_accounts))
             self.settings.setValue("last_email", email)
+            self._refresh_accounts_grid()
+
             
         self.settings.setValue("server", server_num)
         
-        enable_cache = self.settings.value("enable_cache", True, type=bool)
+        # Cache de assets compartilhados sempre ativo.
+        # Cookies/login permanecem isolados por conta via PersistentStoragePath.
+        enable_cache = True
         
-        url_completa = f"https://lobr.creaction-network.com/serverlist/s{server_num}"
+        from src.core.config import GAME_URL_TEMPLATE
+        url_completa = GAME_URL_TEMPLATE.format(server_num=server_num)
         nick = self.input_nick.text().strip()
         
         color_name = COLOR_ORDER[len(self.game_windows) % len(COLOR_ORDER)]
@@ -397,3 +560,39 @@ class LauncherHub(QMainWindow):
             msg.exec_()
         except Exception as e:
             logger.error(f"Erro no popup de doacao: {e}")
+
+    def check_previous_crash(self):
+        try:
+            if self.settings.value("has_crashed", False, type=bool):
+                log_path = self.settings.value("last_crash_log", "")
+                err_code = self.settings.value("last_crash_code", "ERR-UNK-999")
+                
+                # Reseta o marcador para evitar repetição do popup
+                self.settings.setValue("has_crashed", False)
+                
+                msg = QMessageBox(self)
+                msg.setWindowTitle("⚠️ Relatório de Encerramento Inesperado")
+                msg.setIcon(QMessageBox.Warning)
+                msg.setText(
+                    f"<h3>O Launcher detectou um encerramento inesperado na última execução [{err_code}].</h3>"
+                    f"<p>Os logs detalhados do erro foram salvos em:<br><b>{log_path}</b></p>"
+                    f"<p>Deseja abrir a pasta onde o log está salvo para envio ao suporte?</p>"
+                )
+                btn_open = msg.addButton("📁 Abrir Pasta do Log", QMessageBox.ActionRole)
+                btn_ok = msg.addButton("OK", QMessageBox.AcceptRole)
+                
+                msg.setStyleSheet(
+                    "QMessageBox { background-color: #120c18; color: white; }"
+                    " QLabel { color: white; }"
+                    " QPushButton { background-color: #2b1b3d; color: white; padding: 5px 15px; border: 1px solid #c9a444; border-radius: 4px; }"
+                    " QPushButton:hover { background-color: #5c3285; }"
+                )
+                msg.exec_()
+                
+                if msg.clickedButton() == btn_open and log_path:
+                    import os
+                    folder_path = os.path.dirname(log_path)
+                    QDesktopServices.openUrl(QUrl.fromLocalFile(folder_path))
+        except Exception as e:
+            logger.error(f"Erro ao verificar marcador de crash: {e}")
+

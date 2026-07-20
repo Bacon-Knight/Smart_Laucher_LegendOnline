@@ -77,9 +77,15 @@ class CustomTitleBar(QWidget):
             self.btn_cache = QPushButton("🧹")
             self.btn_cache.setFixedSize(22, 22)
             self.btn_cache.setObjectName("TitleBtn")
-            self.btn_cache.setToolTip("Limpar Cache desta Conta")
-            self.btn_cache.clicked.connect(self.parent.clear_cache)
+            self.btn_cache.setToolTip("Forçar Recarregamento (Única forma de limpar a RAM)")
+            self.btn_cache.clicked.connect(self.parent.fast_relog)
             
+            self.btn_float = QPushButton("⚡")
+            self.btn_float.setFixedSize(22, 22)
+            self.btn_float.setObjectName("TitleBtn")
+            self.btn_float.setToolTip("Painel Flutuante de Macros")
+            self.btn_float.clicked.connect(self.parent.toggle_floating_panel)
+
             self.btn_tray = QPushButton("🔽")
             self.btn_tray.setFixedSize(22, 22)
             self.btn_tray.setObjectName("TitleBtn")
@@ -90,10 +96,18 @@ class CustomTitleBar(QWidget):
             self.layout.addWidget(self.btn_mute)
             self.layout.addWidget(self.btn_relog)
             self.layout.addWidget(self.btn_cache)
+            self.layout.addWidget(self.btn_float)
             self.layout.addWidget(self.btn_tray)
-            
+
+            # Indicador de Ping
+            self.ping_label = QLabel("📶 --")
+            self.ping_label.setObjectName("PingLabel")
+            self.ping_label.setToolTip("Ping ao servidor (atualiza a cada 30s)")
+            self.ping_label.setStyleSheet("color: #666; font-size: 10px; padding: 0 4px;")
+            self.layout.addWidget(self.ping_label)
+
             spacer = QWidget()
-            spacer.setFixedWidth(10)
+            spacer.setFixedWidth(4)
             self.layout.addWidget(spacer)
         
         self.btn_minimize = QPushButton("—")

@@ -5,11 +5,12 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWebEngineWidgets import QWebEngineSettings
 
-from src.core.logger import get_logger
+from src.core.logger import get_logger, setup_global_exception_handler
 from src.core.config import resource_path
 from src.ui.launcher_hub import LauncherHub
 
 def main():
+    setup_global_exception_handler()
     logger = get_logger("Main")
     logger.info("Iniciando o Launcher Legend Online...")
     
@@ -28,10 +29,21 @@ def main():
     sys.argv.append("--enable-gpu-rasterization")
     sys.argv.append("--enable-zero-copy")
     sys.argv.append("--disable-site-isolation-trials")
-    sys.argv.append("--renderer-process-limit=3")
-    sys.argv.append("--js-flags=--max-old-space-size=512")
+    sys.argv.append("--renderer-process-limit=4")
+    sys.argv.append("--js-flags=--max-old-space-size=2048")
     sys.argv.append("--disable-logging")
     sys.argv.append("--disable-gpu-memory-buffer-video-frames")
+    sys.argv.extend([
+        "--enable-gpu-compositing",
+        "--enable-begin-frame-scheduling",
+        "--disable-smooth-scrolling",
+        "--disable-background-networking",
+        "--disable-component-update",
+        "--disable-domain-reliability",
+        "--disable-sync",
+        "--disable-client-side-phishing-detection",
+        "--disable-hang-monitor"
+    ])
 
     # No Linux, o sandbox do Chromium bloqueia o carregamento do plugin Flash
     # via EPERM. Desabilitar o sandbox permite que o plugin seja carregado.

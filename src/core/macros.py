@@ -64,21 +64,31 @@ class MacroWorker(QThread):
         self.finished.emit()
 
     def run_autoluta(self):
-        pos = self.params.get('pos')
-        self.status_update.emit("⚔️ AUTO LUTA: Atacando! (Ativando habilidade 2...)")
-        
-        event_press = QKeyEvent(QEvent.KeyPress, Qt.Key_2, Qt.NoModifier, "2", False, 1)
-        QCoreApplication.postEvent(self.target_widget, event_press)
-        event_release = QKeyEvent(QEvent.KeyRelease, Qt.Key_2, Qt.NoModifier, "2", False, 1)
-        QCoreApplication.postEvent(self.target_widget, event_release)
-        
-        time.sleep(0.5)
-        
-        if self.is_running and pos:
-            self.send_click(pos)
-            
-        time.sleep(1.0)
+        sequence = self.params.get('sequence', [])
+        if not sequence:
+            self.finished.emit()
+            return
+
+        keys_display = " ".join(str(t) for _, t in sequence)
+        self.status_update.emit(f"⚔️ AUTO LUTA: Executando sequência [{keys_display}]...")
+
+        for qt_key, key_text in sequence:
+            if not self.is_running:
+                break
+            event_press = QKeyEvent(QEvent.KeyPress, qt_key, Qt.NoModifier, key_text, False, 1)
+            QCoreApplication.postEvent(self.target_widget, event_press)
+            event_release = QKeyEvent(QEvent.KeyRelease, qt_key, Qt.NoModifier, key_text, False, 1)
+            QCoreApplication.postEvent(self.target_widget, event_release)
+            time.sleep(0.2)
+
+        # Aguarda antes de sinalizar fim (evita disparo imediato do ciclo seguinte)
+        for _ in range(15):
+            if not self.is_running:
+                break
+            time.sleep(0.1)
+
         self.finished.emit()
+
 
     def run_custom_macro(self):
         queue = self.params.get('queue', [])

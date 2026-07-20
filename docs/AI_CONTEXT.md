@@ -1,53 +1,70 @@
 # Legend Online - Custom Launcher Arquitetura & Contexto
 
-Este documento serve como a **Bíblia de Arquitetura e Contexto** deste projeto. Se você é um LLM (Agente IA, Copilot, Cursor, Gemini, etc.) e está lendo este documento, trate as informações aqui descritas como a fonte primária da verdade sobre como e porquê este software foi construído.
+Este documento serve como a **Bíblia de Arquitetura e Contexto** deste projeto. Se você é um LLM (Agente IA, Copilot, Cursor, Gemini, Antigravity, etc.) e está lendo este documento, trate as informações aqui descritas como a fonte primária da verdade sobre como e porquê este software foi construído.
+
+---
 
 ## 1. O Problema Original
-O jogo "Legend Online" é um clássico jogo de browser que dependia fortemente do Adobe Flash Player. Com a morte do Flash, a única maneira de jogar era através de launchers de terceiros pesados, mal otimizados e limitados a poucas instâncias.
-O objetivo deste projeto foi criar um **Launcher Leve, Escalável e Injetável** que permita o **Multi-Boxing** (jogar com 10, 20 contas simultaneamente no mesmo PC), além de incluir macros indetectáveis.
+O jogo "Legend Online" é um clássico jogo de browser que dependia fortemente do Adobe Flash Player. Com a descontinuação do Flash nos navegadores convencionais, a única maneira de jogar era através de launchers de terceiros pesados, mal otimizados, instáveis e limitados a poucas instâncias.
+
+O objetivo deste projeto foi criar um **Launcher Leve, Escalável, Seguro e Injetável** que permita o **Multi-Boxing** (jogar com 10, 20+ contas simultaneamente no mesmo PC), além de incluir automações e macros indetectáveis rodando em segundo plano.
+
+---
 
 ## 2. Escolha da Stack de Tecnologia
-- **Python 3:** Linguagem base, excelente para prototipagem rápida e automações.
-- **PyQt5:** O Framework gráfico escolhido no lugar do PyQt6 ou PySide. O motivo principal para isso é que **apenas o motor WebEngine antigo do PyQt5 suporta a injeção nativa do plugin NPAPI/PPAPI do Flash (`pepflashplayer.dll`)**. Tentar migrar este projeto para PyQt6 fará com que o jogo pare de renderizar (tela preta ou de erro do Flash). Não tente atualizar a versão do framework Qt.
-- **QWebEngineView:** Um mini-browser Chromium embedado em C++.
+- **Python 3:** Linguagem base para prototipagem rápida, manipulação de eventos e automação.
+- **PyQt5:** O Framework gráfico escolhido no lugar do PyQt6 ou PySide6. O motivo principal para isso é que **apenas o motor WebEngine antigo do PyQt5 suporta a injeção nativa do plugin NPAPI/PPAPI do Flash (`pepflashplayer.dll` no Windows / `libpepflashplayer.so` no Linux)**. Tentar migrar este projeto para PyQt6 fará com que o jogo pare de renderizar (tela preta ou erro de plugin). **Não tente atualizar a versão do framework Qt.**
+- **QWebEngineView:** Mini-browser Chromium embedado em C++.
+
+---
 
 ## 3. Decisões Arquiteturais e "Hacks" Críticos
 
-### A. O Isolamento de Sessão (Multi-Boxing)
-Para que o jogador logue em várias contas sem que o navegador misture os cookies, foi utilizado o `QWebEngineProfile`.
-- Cada conta gera um nome de perfil seguro baseado no seu E-mail (`email.replace('@', '_')`).
-- Este perfil ganha uma pasta de cache própria local e um `off-the-record profile` (similar à aba anônima persistente) chamado por instâncias separadas.
+### A. Estrutura Modular (`src/`)
+- **Ponto de Entrada:** `launcher.py` ➔ chama `main()` em `src/main.py`.
+- **`src/main.py`**: Configuração global do QApplication, flags de runtime do Chromium/V8 e inicialização do manipulador de exceções.
+- **`src/ui/launcher_hub.py`**: Hub de gerenciamento de contas, formulário, grade de cartões, Boss Key e notificação pós-crash.
+- **`src/ui/game_window.py`**: Janela isolada de execução do jogo, isolamento de perfil, redimensionamento proporcional e atalhos.
+- **`src/core/macros.py`**: Motor de macros (`MacroWorker`) rodando em `QThread` paralela.
+- **`src/core/logger.py`**: Sistema centralizado de logs, anonimização de dados e relatórios de erros não tratados.
+
+### B. Isolamento de Sessão (Multi-Boxing)
+Para que o jogador logue em várias contas sem que o navegador misture os cookies:
+- Cada conta gera um nome de perfil seguro baseado em seu e-mail (`safe_email`).
+- O `QWebEngineProfile` define `PersistentStoragePath` isolado por conta, garantindo cookies únicos.
+- O cache de mídias/assets (SWF, imagens) usa `setCachePath(shared_cache_dir)` compartilhado para economizar banda de rede e acelerar carregamentos.
 - **Atenção IA:** Ao alterar a inicialização da `GameWindow`, **NUNCA** faça com que janelas compartilhem o `QWebEngineProfile.defaultProfile()`, ou as contas se cruzarão e deslogarão.
 
-### B. Injeção Auto-Login via JavaScript
-Os menus padrão não possuíam API aberta. A solução foi construir um sistema que extrai as informações do `QSettings` da GUI feita no `LauncherHub` e roda um `self.page.runJavaScript()` assim que a página acusa carregamento inicial, injetando login/senha e forçando o `submit()` no formulário de destino.
+### C. Injeção Auto-Login via JavaScript
+Os menus padrão do jogo não possuem API aberta. A solução extrai credenciais sanitizadas via JSON (`LOGIN_JS_SCRIPT`) e executa `self.page.runJavaScript()`, preenchendo os campos do DOM e submetendo o formulário automaticamente no evento `loadFinished`.
 
-### C. Sistema de Macros Baseado em Eventos do Qt
-Ao invés de utilizar bibliotecas clássicas como `pyautogui`, `keyboard` ou `pynput` que sequestram o mouse real do usuário, este Launcher usa a "Magia Negra" do Qt: `QCoreApplication.postEvent()`.
-- O AutoClicker Fantasma pega o alvo X/Y e despacha pacotes puros de `QMouseEvent` direto no ponteiro de `focusProxy()` (o sub-processo de renderização do Chromium).
-- O resultado: O usuário pode botar o AutoClick em 3 abas, minimizar todas elas e ir assistir um vídeo no YouTube enquanto o jogo joga sozinho em background.
-- **Atenção IA:** Não instale bibliotecas externas de automação GUI. Mantenha os macros via injeção de eventos do Qt.
+### D. Sistema de Macros Baseado em Eventos do Qt (Background)
+O Launcher não utiliza bibliotecas de automação baseadas no SO (como `pyautogui` ou `pynput`).
+- Os cliques e teclas são despachados diretamente ao widget de renderização do Chromium (`focusProxy()`) via `QCoreApplication.postEvent()`.
+- **Resultado:** O usuário pode rodar macros em múltiplas janelas minimizadas sem perder o controle do mouse do sistema operacional.
 
-### D. Formação Mágica (Matemática Isométrica 5x5)
-O jogo tem um minigame 5x5 desenhado em perspectiva isométrica. Ao invés de usar processamento de visão pesada (`OpenCV`), descobrimos que o tamanho do grid varia de forma perfeitamente linear baseada no Zoom.
-- Base Tile (Zoom 1.0): W=104, H=52
-- Calculamos o zoom atual lendo o fator de `resizeEvent`.
-- Com um único clique do usuário no centro, mapeamos os 25 pontos através da fórmula:
-  ```python
-  screen_x = cx + (x - y) * (w / 2)
-  screen_y = cy + (x + y) * (h / 2)
-  ```
-- Executamos os cliques no Background utilizando uma Fila (`QTimer`) respeitando tempos de combate.
+### E. Formação Mágica (Matemática Isométrica 5x5)
+Mapeamento geométrico linear baseado no zoom da janela. A partir de um ponto central e das dimensões dos tiles escalados pelo zoom, gera-se uma fila de coordenadas para 25 posições disparadas via `QTimer`.
 
-### D. Automações de Visão (Auto-Luta)
-Para cenários imprevisíveis, o sistema lê a tela (pixels convertidos do QPixmap) procurando padrões de cor (botões vermelhos/dourados). Isso é um contorno excelente pois não exige Tesseract (OCR) pesado ou Yolo. O mapeamento é feito por amostragem de pixels na área direita-inferior.
+### F. Visão Computacional Leve (`check_autoluta`)
+Para a funcionalidade de Auto-Luta (F5), o leitor de tela lê pixels específicos para identificar o orbe de combate.
+- **Otimização Crítica:** O `grab()` do navegador utiliza uma sub-região recortada (`crop_rect = QRect(...)`) focada apenas na área do HUD, evitando alocar imagens completas da janela a cada 2 segundos.
 
-### E. Modo Stealth e Garbage Collection
-Devido ao jogo ficar em background, ao acionar `Ctrl+Shift+A` ou passar de 90s inativo, escondemos a tela inteira e deixamos apenas um `QSystemTrayIcon` com o icone do Bacon Knight rodando.
-Na hora do fechamento, para matar os sub-processos Chromium mortos do Windows, o `closeEvent` chama explicitamente o `.deleteLater()` do Profile, da Page e do QWebEngineView. Isso mata vazamentos massivos de memória de Multi-Boxing.
+### G. Gerenciamento de Memória, Flags do Chromium & Performance
+- **Heap V8 Expandido (`--js-flags=--max-old-space-size=2048`):** Impede que a engine JavaScript entre em Garbage Collection Thrashing contínuo (causa do lag após 15 minutos).
+- **Aceleração por Hardware (`--enable-gpu-compositing`):** Habilita composição de camadas por GPU.
+- **Serviços de Fundo Desativados:** Flags como `--disable-background-networking`, `--disable-sync`, `--disable-component-update` cortam tarefas ociosas do Chromium.
+- **Throttling no `eventFilter`:** A redefinição do `idle_timer` durante o movimento do mouse é limitada a 1 vez a cada 10 segundos.
+- **Garbage Collection no Fast Relog:** `fast_relog()` descarrega a página para `about:blank` e força `gc.collect()`.
+- **Limpeza de Threads (`PingWorker`):** Threads de ping conectam `.finished.connect(self.ping_worker.deleteLater)` para desalocar memória.
+- **Destruição Segura de Objetos Qt:** `closeEvent` e `resizeEvent` protegem chamadas ao `QWebEnginePage` usando a flag `_is_closing` e tratamento defensivo contra `RuntimeError`.
 
-### F. Otimizações Extremas do Chromium (Flags)
-As flags passadas no `sys.argv` (ver bloco final de `launcher.py`) desativam serviços do Chrome desnecessários (sync, print, rasterization via CPU). Isso corta o uso de memória do WebEngine quase pela metade.
+### H. Diagnóstico, Erros e Notificação de Crashes
+- **Códigos de Erro Estruturados:** `setup_global_exception_handler()` em `logger.py` classifica exceções em códigos (`ERR-QT-501`, `ERR-NET-400`, `ERR-MEM-500`, `ERR-REF-404`, `ERR-UNK-999`).
+- **Relatório Pós-Crash:** Se a aplicação cair, `QSettings` armazena o evento e `check_previous_crash()` no `LauncherHub` exibe uma janela informativa com o botão **"📁 Abrir Pasta do Log"**.
+- **Privacidade (`mask_email`):** Todos os e-mails registrados no log são anonimizados (ex: `e******1@gmail.com`). Senhas jamais são gravadas.
 
-## 4. O Futuro (O que você pode fazer se solicitado)
-Leia o arquivo `ROADMAP.md` para entender as integrações pendentes. Use isso para se situar sobre "o que" programar a seguir caso o usuário seja genérico em seu pedido.
+---
+
+## 4. O Futuro e Roadmap
+Consulte o arquivo `docs/ROADMAP.md` para verificar pendências e próximas funcionalidades planejadas.

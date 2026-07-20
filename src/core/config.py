@@ -65,3 +65,5 @@ BRIGHT_COLORS = {
 }
 
 COLOR_ORDER = ["Verde", "Azul", "Roxo", "Dourado", "Vermelho"]
+
+GAME_URL_TEMPLATE = "https://lobr.creaction-network.com/serverlist/s{server_num}"

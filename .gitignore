@@ -25,6 +25,9 @@ AppDir/
 deb_package/
 cache/
 
-# Pastas Pessoais e Backups
+# Pastas Pessoais, Backups e Arquivos Comprimidos
 _Documentos_Pessoais/
 __Old/
+*.rar
+*.zip
+
