@@ -1,9 +1,10 @@
-from PyQt5.QtCore import Qt
+import sys
+from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QPushButton
 
 class FramelessWindowMixin:
     def enable_windows_snap(self):
-        import sys
         if sys.platform != 'win32':
             return
         try:
@@ -17,8 +18,54 @@ class FramelessWindowMixin:
         except Exception as e:
             pass
 
+    def setup_linux_frameless(self):
+        if sys.platform != 'win32':
+            self.setMouseTracking(True)
+            self.installEventFilter(self)
+
+    def get_edge_at(self, pos, margin=8):
+        x, y = pos.x(), pos.y()
+        w, h = self.width(), self.height()
+        
+        edges = 0
+        if y <= margin:
+            edges |= Qt.TopEdge
+        elif y >= h - margin:
+            edges |= Qt.BottomEdge
+            
+        if x <= margin:
+            edges |= Qt.LeftEdge
+        elif x >= w - margin:
+            edges |= Qt.RightEdge
+            
+        return edges
+
+    def linux_event_filter(self, obj, event):
+        if sys.platform == 'win32' or self.isMaximized():
+            return False
+            
+        if event.type() == QEvent.MouseMove:
+            if event.buttons() == Qt.NoButton:
+                edges = self.get_edge_at(event.pos())
+                if edges == (Qt.TopEdge | Qt.LeftEdge) or edges == (Qt.BottomEdge | Qt.RightEdge):
+                    self.setCursor(Qt.SizeFDiagCursor)
+                elif edges == (Qt.TopEdge | Qt.RightEdge) or edges == (Qt.BottomEdge | Qt.LeftEdge):
+                    self.setCursor(Qt.SizeBDiagCursor)
+                elif edges & (Qt.TopEdge | Qt.BottomEdge):
+                    self.setCursor(Qt.SizeVerCursor)
+                elif edges & (Qt.LeftEdge | Qt.RightEdge):
+                    self.setCursor(Qt.SizeHorCursor)
+                else:
+                    self.unsetCursor()
+        elif event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:
+            edges = self.get_edge_at(event.pos())
+            if edges and hasattr(self, "windowHandle") and self.windowHandle():
+                if hasattr(self.windowHandle(), "startSystemResize"):
+                    if self.windowHandle().startSystemResize(Qt.Edge(edges)):
+                        return True
+        return False
+
     def frameless_native_event(self, eventType, message, title_bar_height=40):
-        import sys
         if sys.platform != 'win32':
             return False, 0
         try:
@@ -31,7 +78,6 @@ class FramelessWindowMixin:
                         return True, 0
                 
                 if msg.message == 0x0084: # WM_NCHITTEST
-                    from PyQt5.QtGui import QCursor
                     pos = self.mapFromGlobal(QCursor.pos())
                     x, y = pos.x(), pos.y()
                     w, h = self.width(), self.height()

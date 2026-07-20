@@ -16,7 +16,11 @@ def main():
     if sys.platform == 'win32':
         plugin_path = resource_path("pepflashplayer.dll")
     else:
-        plugin_path = resource_path("libpepflashplayer.so")
+        system_plugin = "/usr/lib/pepperflashplugin-nonfree/libpepflashplayer.so"
+        if os.path.exists(system_plugin):
+            plugin_path = system_plugin
+        else:
+            plugin_path = resource_path("libpepflashplayer.so")
 
     sys.argv.append(f"--ppapi-flash-path={plugin_path}")
     sys.argv.append("--ppapi-flash-version=32.0.0.371") 
@@ -28,6 +32,13 @@ def main():
     sys.argv.append("--js-flags=--max-old-space-size=512")
     sys.argv.append("--disable-logging")
     sys.argv.append("--disable-gpu-memory-buffer-video-frames")
+
+    # No Linux, o sandbox do Chromium bloqueia o carregamento do plugin Flash
+    # via EPERM. Desabilitar o sandbox permite que o plugin seja carregado.
+    if sys.platform != 'win32':
+        pass
+        # sys.argv.append("--no-sandbox")
+        # sys.argv.append("--disable-setuid-sandbox")
 
     if sys.platform == 'win32':
         try:

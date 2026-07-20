@@ -102,6 +102,8 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
             
         self.profile = QWebEngineProfile(safe_email, self.browser)
         self.profile.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+        self.profile.setHttpUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36")
+        self.profile.setHttpAcceptLanguage("pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7")
         
         if enable_cache:
             cache_dir = get_cache_dir(safe_email)
@@ -121,6 +123,7 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
         self.title_bar.btn_mute.setText("🔇" if self.is_muted else "🔊")
         
         self.enable_windows_snap()
+        self.setup_linux_frameless()
         self.browser.loadFinished.connect(self.inject_login)
         
         logger.info(f"[{email}] Conectando no servidor: {server_url}")
@@ -303,9 +306,15 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
                 QTimer.singleShot(0, self.hide_to_tray)
                 event.ignore()
                 return
+            elif self.isMaximized():
+                self.main_card.setStyleSheet(f"#MainCard {{ background-color: {self.bg_color}; border-radius: 0px; border: none; }}")
+            else:
+                self.main_card.setStyleSheet(f"#MainCard {{ background-color: {self.bg_color}; border-radius: 10px; border: 1px solid #351554; }}")
         super().changeEvent(event)
 
     def eventFilter(self, obj, event):
+        if self.linux_event_filter(obj, event):
+            return True
         if event.type() in (QEvent.MouseMove, QEvent.MouseButtonPress, QEvent.KeyPress):
             self.idle_timer.start(90000)
             

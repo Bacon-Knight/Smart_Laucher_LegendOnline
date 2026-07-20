@@ -20,6 +20,9 @@ __pycache__/
 
 # Binários grandes e Caches Chromium
 *.exe
+*.deb
+AppDir/
+deb_package/
 cache/
 
 # Pastas Pessoais e Backups
