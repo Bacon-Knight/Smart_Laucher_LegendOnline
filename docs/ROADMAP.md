@@ -4,7 +4,7 @@ Este documento registra as metas concluídas e os próximos passos para o futuro
 
 ---
 
-## ✅ Funcionalidades Concluídas (v2.1+)
+## ✅ Funcionalidades Concluídas (v2.2)
 
 - [x] **Painel de Gerenciamento de Contas em Cartões (Grid):** Tela dedicada no `LauncherHub` exibindo as contas salvas em cartões visuais com informações de servidor, nick, e-mail e atalhos rápidos de 1 clique.
 - [x] **Relatório de Desempenho e Ping em Tempo Real:** Indicador de ping HTTP integrado à barra de título da janela do jogo, atualizado continuamente em thread secundária.

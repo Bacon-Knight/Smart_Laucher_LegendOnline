@@ -2,13 +2,13 @@
 set -euo pipefail
 
 # -------------------------------------------------
-# 1️⃣  PyInstaller – gerar o pacote para Linux
+# 1️⃣  PyInstaller – gerar o pacote para Linux (v2.2)
 # -------------------------------------------------
-echo "=== Gerando aplicação com PyInstaller para Linux ..."
-pyinstaller --noconfirm LegendOnlineLauncher_v2.1_linux.spec
+echo "=== Gerando aplicação com PyInstaller para Linux (v2.2) ..."
+pyinstaller --noconfirm LegendOnlineLauncher_v2.2_linux.spec
 
 # O aplicativo empacotado ficará em:
-#   dist/LegendOnlineLauncher_v2.1_linux
+#   dist/LegendOnlineLauncher_v2.2_linux
 # -------------------------------------------------
 
 # -------------------------------------------------
@@ -25,18 +25,18 @@ mkdir -p deb_package/DEBIAN \
 # ----------------- control file -----------------
 cat > deb_package/DEBIAN/control <<'EOF'
 Package: legend-online-launcher
-Version: 2.1.0
+Version: 2.2.0
 Section: utils
 Priority: optional
 Architecture: amd64
 Maintainer: Mariano <mariano@example.com>
 Depends: python3 (>= 3.8), python3-pyqt5, python3-pyqt5.qtwebengine
-Description: Legend Online Launcher com plugin Flash embutido (v32.0.0.371)
+Description: Legend Online Launcher com plugin Flash embutido (v32.0.0.371) - Version 2.2.0
  Launcher otimizado para Legend Online com suporte a Flash PPAPI.
 EOF
 
 # ----------------- copiar pacote -----------------
-cp dist/LegendOnlineLauncher_v2.1_linux deb_package/opt/legend-launcher/legend-launcher-bin
+cp dist/LegendOnlineLauncher_v2.2_linux deb_package/opt/legend-launcher/legend-launcher-bin
 chmod 755 deb_package/opt/legend-launcher/legend-launcher-bin
 
 # Copiar plugin flash para uma pasta do sistema onde o Sandbox do Chromium permite leitura
@@ -71,8 +71,8 @@ EOF
 
 # ----------------- criar .deb -----------------
 echo "=== Construindo .deb ..."
-fakeroot dpkg-deb --build deb_package legend-online-launcher_2.1.0_amd64.deb
-echo "✔ .deb pronto → legend-online-launcher_2.1.0_amd64.deb"
+fakeroot dpkg-deb --build deb_package legend-online-launcher_2.2.0_amd64.deb
+echo "✔ .deb pronto → legend-online-launcher_2.2.0_amd64.deb"
 
 # -------------------------------------------------
 # 3️⃣  AppImage 
@@ -84,7 +84,7 @@ mkdir -p AppDir/usr/bin/legend-launcher-app \
          AppDir/usr/share/applications
 
 # Copia o binário executável do PyInstaller
-cp dist/LegendOnlineLauncher_v2.1_linux AppDir/usr/bin/legend-launcher-app/legend-launcher-bin
+cp dist/LegendOnlineLauncher_v2.2_linux AppDir/usr/bin/legend-launcher-app/legend-launcher-bin
 chmod +x AppDir/usr/bin/legend-launcher-app/legend-launcher-bin
 
 # Copia ícone
@@ -127,5 +127,5 @@ if ! command -v appimagetool &>/dev/null; then
 fi
 
 echo "=== Gerando AppImage ..."
-appimagetool AppDir Legend-Online-Launcher-v2.1-x86_64.AppImage
-echo "✔ AppImage pronto → Legend-Online-Launcher-v2.1-x86_64.AppImage"
+appimagetool AppDir Legend-Online-Launcher-v2.2-x86_64.AppImage
+echo "✔ AppImage pronto → Legend-Online-Launcher-v2.2-x86_64.AppImage"

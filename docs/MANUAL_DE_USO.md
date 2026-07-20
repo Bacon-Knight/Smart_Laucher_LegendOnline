@@ -1,6 +1,6 @@
 # 📖 Manual de Uso - Bacon Knight Launcher
 
-Bem-vindo ao manual oficial do **Bacon Knight Launcher (v2.1+)**. Aqui você vai aprender a tirar o máximo de proveito do nosso sistema de multi-boxing, otimizações de performance, automação e stealth.
+Bem-vindo ao manual oficial do **Bacon Knight Launcher (v2.2)**. Aqui você vai aprender a tirar o máximo de proveito do nosso sistema de multi-boxing, otimizações de performance, automação e stealth.
 
 ---
 

@@ -4,7 +4,7 @@
 
 ## 📌 1. Visão Geral do Projeto
 
-O **Smart Launcher Legend Online** (v2.1+) é uma aplicação desktop desenvolvida em **Python 3** utilizando a biblioteca **PyQt5** (com `QWebEngineView`) e o plugin **Pepper Flash (PPAPI)** (`pepflashplayer.dll`). 
+O **Smart Launcher Legend Online** (v2.2) é uma aplicação desktop desenvolvida em **Python 3** utilizando a biblioteca **PyQt5** (com `QWebEngineView`) e o plugin **Pepper Flash (PPAPI)** (`pepflashplayer.dll` / `libpepflashplayer.so`). 
 
 O objetivo principal do software é fornecer um ambiente otimizado, de alto desempenho, seguro e customizado para executar o jogo de navegador *Legend Online*, superando as limitações dos navegadores modernos que descontinuaram o suporte nativo ao Adobe Flash.
 
