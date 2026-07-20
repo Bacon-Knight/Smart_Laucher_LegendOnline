@@ -1,26 +1,38 @@
 import os
 import sys
 
-def resource_path(relative_path):
+def resource_path(relative_path: str) -> str:
     """ Pega o caminho absoluto, funcionando tanto em dev quanto num .exe do PyInstaller """
     try:
-        base_path = sys._MEIPASS
+        base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
     except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-def get_app_data_dir():
+def get_app_data_dir() -> str:
     if sys.platform == 'win32':
         app_data_path = os.getenv('LOCALAPPDATA') or os.path.expanduser('~')
     else:
         app_data_path = os.getenv('XDG_DATA_HOME') or os.path.join(os.path.expanduser('~'), '.local', 'share')
     return os.path.join(app_data_path, "LegendOnlineLauncher")
 
-def get_cache_dir(safe_email):
+def get_cache_dir(safe_email: str) -> str:
     return os.path.join(get_app_data_dir(), "cache", safe_email)
 
-def get_shared_cache_dir():
+def get_shared_cache_dir() -> str:
     return os.path.join(get_app_data_dir(), "cache", "shared_assets")
+
+def get_login_js_script(email_json: str, password_json: str) -> str:
+    """Carrega o script de login a partir do arquivo JS em assets se existir, ou usa a constante fallback."""
+    js_path = resource_path(os.path.join("src", "assets", "js", "login.js"))
+    if os.path.exists(js_path):
+        try:
+            with open(js_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                return content.replace("__EMAIL__", email_json).replace("__PASSWORD__", password_json)
+        except Exception:
+            pass
+    return LOGIN_JS_SCRIPT.format(email_json=email_json, password_json=password_json)
 
 LOGIN_JS_SCRIPT = """
 setTimeout(function() {{
@@ -46,6 +58,7 @@ setTimeout(function() {{
     }}
 }}, 1500);
 """
+
 
 COLOR_MAP = {
     "Vermelho": "#2b0a0a",

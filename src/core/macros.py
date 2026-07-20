@@ -1,5 +1,6 @@
 import time
-from PyQt5.QtCore import QThread, pyqtSignal, QCoreApplication, QEvent, Qt
+from typing import Dict, Any, Optional
+from PyQt5.QtCore import QThread, pyqtSignal, QCoreApplication, QEvent, Qt, QPoint
 from PyQt5.QtGui import QMouseEvent, QKeyEvent
 
 class MacroWorker(QThread):
@@ -8,12 +9,13 @@ class MacroWorker(QThread):
     # Emitido para indicar que a macro terminou
     finished = pyqtSignal()
     
-    def __init__(self, target_widget, macro_type, params):
+    def __init__(self, target_widget: Any, macro_type: str, params: Dict[str, Any]) -> None:
         super().__init__()
         self.target_widget = target_widget
-        self.macro_type = macro_type  # 'autoclick' ou 'formacao'
+        self.macro_type = macro_type  # 'autoclick', 'formacao', 'autoluta', 'custom'
         self.params = params
         self.is_running = True
+
         
     def run(self):
         if self.macro_type == 'autoclick':
@@ -135,12 +137,13 @@ class MacroWorker(QThread):
             
         self.finished.emit()
         
-    def send_click(self, pos):
+    def send_click(self, pos: Optional[QPoint]) -> None:
         if not pos: return
         event_press = QMouseEvent(QEvent.MouseButtonPress, pos, pos, Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
         QCoreApplication.postEvent(self.target_widget, event_press)
         event_release = QMouseEvent(QEvent.MouseButtonRelease, pos, pos, Qt.LeftButton, Qt.NoButton, Qt.NoModifier)
         QCoreApplication.postEvent(self.target_widget, event_release)
         
-    def stop(self):
+    def stop(self) -> None:
         self.is_running = False
+

@@ -573,6 +573,12 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
         super().resizeEvent(event)
 
     def closeEvent(self, event):
+        if hasattr(self, 'macro_worker') and self.macro_worker is not None:
+            try:
+                self.stop_macros()
+            except Exception as e:
+                logger.debug(f"Erro ao parar macros ao fechar: {e}")
+
         if getattr(self, 'force_close', False):
             self._is_closing = True
             logger.info(f"[{mask_email(self.email)}] Limpando recursos de memória e fechando (Forçado)...")
@@ -615,4 +621,5 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
             event.ignore()
         else:
             event.ignore()
+
 

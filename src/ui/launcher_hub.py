@@ -9,10 +9,13 @@ from PyQt5.QtGui import QColor, QKeySequence, QDesktopServices
 
 from src.core.logger import get_logger
 from src.core.config import resource_path, COLOR_MAP, COLOR_ORDER
+from src.services.account_service import AccountService
+from src.models.account import Account
 from src.ui.components.title_bar import CustomTitleBar
 from src.ui.game_window import GameWindow
 
 logger = get_logger("LauncherHub")
+
 
 if sys.platform == 'win32':
     class LASTINPUTINFO(ctypes.Structure):
@@ -135,8 +138,10 @@ class LauncherHub(QMainWindow):
             self.boss_hidden = True
             self.hide()
             for gw in self.game_windows:
-                try: gw.hide()
-                except: pass
+                try:
+                    gw.hide()
+                except Exception as e:
+                    logger.debug(f"Erro ao ocultar janela de jogo: {e}")
 
     def show_from_tray(self):
         self.boss_hidden = False
@@ -150,18 +155,21 @@ class LauncherHub(QMainWindow):
                 gw.showNormal()
                 gw.activateWindow()
                 gw.raise_()
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"Erro ao exibir janela de jogo: {e}")
 
     def close_all_games(self):
         for gw in self.game_windows:
-            try: gw.close()
-            except: pass
+            try:
+                gw.close()
+            except Exception as e:
+                logger.debug(f"Erro ao fechar janela de jogo: {e}")
         self.game_windows.clear()
         
     def closeEvent(self, event):
         self.close_all_games()
         event.accept()
+
 
     def load_styles(self):
         try:

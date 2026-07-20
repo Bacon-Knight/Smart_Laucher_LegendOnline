@@ -262,6 +262,22 @@ footer a:hover {
     text-decoration: underline;
 }
 
+/* Accessible Focus Outline */
+.btn:focus-visible,
+footer a:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .logo,
+    .btn,
+    .glass-card {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .title {
@@ -277,3 +293,4 @@ footer a:hover {
         justify-content: center;
     }
 }
+

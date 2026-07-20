@@ -21,12 +21,17 @@ O objetivo deste projeto foi criar um **Launcher Leve, Escalável, Seguro e Inje
 ## 3. Decisões Arquiteturais e "Hacks" Críticos
 
 ### A. Estrutura Modular (`src/`)
-- **Ponto de Entrada:** `launcher.py` ➔ chama `main()` em `src/main.py`.
-- **`src/main.py`**: Configuração global do QApplication, flags de runtime do Chromium/V8 e inicialização do manipulador de exceções.
+- **Ponto de Entrada:** `src/main.py` ➔ Inicializador direto do aplicativo e da interface.
+- **`src/main.py`**: Configuração global do `QApplication` e chamada do ambiente Qt WebEngine.
+- **`src/core/webengine.py`**: Centralizador dos argumentos de runtime do Chromium/V8 e ativação do plugin Flash.
+- **`src/models/account.py`**: Dataclass `Account` encapsulando e-mail, senha, servidor, nickname e cor.
+- **`src/services/account_service.py`**: Serviço isolado de CRUD e salvamento/leitura de contas em `QSettings`.
+- **`src/assets/js/login.js`**: Script de automação de login sanitizado injetado via WebEngine.
 - **`src/ui/launcher_hub.py`**: Hub de gerenciamento de contas, formulário, grade de cartões, Boss Key e notificação pós-crash.
 - **`src/ui/game_window.py`**: Janela isolada de execução do jogo, isolamento de perfil, redimensionamento proporcional e atalhos.
 - **`src/core/macros.py`**: Motor de macros (`MacroWorker`) rodando em `QThread` paralela.
 - **`src/core/logger.py`**: Sistema centralizado de logs, anonimização de dados e relatórios de erros não tratados.
+
 
 ### B. Isolamento de Sessão (Multi-Boxing)
 Para que o jogador logue em várias contas sem que o navegador misture os cookies:

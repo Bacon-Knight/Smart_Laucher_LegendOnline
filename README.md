@@ -48,8 +48,12 @@ Pelo menu de ferramentas (`🛠`) na barra de título da janela do jogo, é poss
 ## 🧠 Arquitetura do Projeto
 
 A base de código está organizada sob o diretório `src/`:
-- **`src/core/`**: Gerenciador de macros em threads secundárias (`macros.py`), configurações e caminhos globais (`config.py`), e registrador central de logs com segurança e captura de erros (`logger.py`).
+- **`src/core/`**: Gerenciador de macros em threads secundárias (`macros.py`), configurações do Chromium/WebEngine (`webengine.py`), constantes (`config.py`) e registrador central de logs (`logger.py`).
+- **`src/models/`**: Dataclasses e modelos de dados para contas de usuário (`account.py`).
+- **`src/services/`**: Serviços desacoplados de persistência em `QSettings` (`account_service.py`).
+- **`src/assets/`**: Scripts JavaScript externos (`js/login.js`) e ícones do sistema.
 - **`src/ui/`**: Hub do Launcher (`launcher_hub.py`), janelas de jogo isoladas (`game_window.py`), componentes visuais (`title_bar.py`, `frameless.py`, `dialogs.py`) e painel flutuante de macros (`floating_macro.py`).
+- **`src/main.py`**: Ponto de entrada limpo e inicializador da aplicação.
 
 Os arquivos de log e cache persistem em `%LOCALAPPDATA%\LegendOnlineLauncher`.
 
@@ -62,7 +66,8 @@ Os arquivos de log e cache persistem em `%LOCALAPPDATA%\LegendOnlineLauncher`.
 
 ### Compilação Standalone (`.exe`)
 ```bash
-pyinstaller --noconsole --onefile --icon="bacon_knight.ico" --add-data "style.qss;." --add-data "pepflashplayer.dll;." --add-data "Ferramentas;Ferramentas" --add-data "bacon_knight.ico;." --name "LegendOnlineLauncher_v2.1" launcher.py
+pyinstaller --noconsole --onefile --icon="bacon_knight.ico" --add-data "style.qss;." --add-data "pepflashplayer.dll;." --add-data "Ferramentas;Ferramentas" --add-data "bacon_knight.ico;." --add-data "src/assets;src/assets" --name "LegendOnlineLauncher_v2.2" src/main.py
+
 ```
 
 ## 📚 Documentação Complementar

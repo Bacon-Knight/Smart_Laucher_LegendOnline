@@ -13,7 +13,7 @@ def mask_email(email: str) -> str:
         masked = name[0] + "*" * (len(name) - 2) + name[-1]
     return f"{masked}@{domain}"
 
-def get_logger(name="Launcher"):
+def get_logger(name: str = "Launcher") -> logging.Logger:
     logger = logging.getLogger(name)
     if not logger.handlers:
         logger.setLevel(logging.DEBUG)
@@ -39,7 +39,7 @@ def get_logger(name="Launcher"):
 
     return logger
         
-def setup_global_exception_handler():
+def setup_global_exception_handler() -> None:
     """Captura qualquer exceção não tratada na aplicação e registra no log com um código de erro."""
     logger = get_logger("GlobalErrorHandler")
 
@@ -73,9 +73,10 @@ def setup_global_exception_handler():
             settings.setValue("has_crashed", True)
             settings.setValue("last_crash_log", log_path)
             settings.setValue("last_crash_code", error_code)
-        except Exception:
-            pass
+        except Exception as err:
+            logger.error(f"Falha ao registrar estado de crash no QSettings: {err}")
 
     sys.excepthook = handle_uncaught_exception
+
 
 
