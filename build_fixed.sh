@@ -29,7 +29,7 @@ Version: 2.2.0
 Section: utils
 Priority: optional
 Architecture: amd64
-Maintainer: Mariano <mariano@example.com>
+Maintainer: Bacon Knight <contact@baconknight.dev>
 Depends: python3 (>= 3.8), python3-pyqt5, python3-pyqt5.qtwebengine
 Description: Legend Online Launcher com plugin Flash embutido (v32.0.0.371) - Version 2.2.0
  Launcher otimizado para Legend Online com suporte a Flash PPAPI.
