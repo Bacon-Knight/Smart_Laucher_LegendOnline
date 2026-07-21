@@ -42,11 +42,14 @@ def get_chromium_flags() -> List[str]:
     return flags
 
 def setup_webengine_environment() -> None:
-    """Aplica os argumentos do Chromium em sys.argv e habilita plugins no QWebEngineSettings."""
+    """Aplica os argumentos do Chromium em sys.argv."""
     flags = get_chromium_flags()
     for flag in flags:
         if flag not in sys.argv:
             sys.argv.append(flag)
-            
+
+def enable_webengine_plugins() -> None:
+    """Habilita plugins no QWebEngineSettings (deve ser chamado APÓS a criação do QApplication)."""
     QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
     logger.info("Ambiente Qt WebEngine e plugin Flash configurados com sucesso.")
+
