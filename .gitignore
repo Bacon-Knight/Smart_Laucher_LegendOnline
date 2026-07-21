@@ -8,10 +8,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# IDEs
+# IDEs e Agentes de IA
 .vscode/
 .idea/
 .gemini/
+.agents/
 *.swp
 
 # Arquivos de log e testes
@@ -31,3 +32,8 @@ __Old/
 *.rar
 *.zip
 
+# Documentação Interna / Planejamento / Contextos de IA
+docs/AI_CONTEXT.md
+docs/ANALISE_DO_PROJETO.md
+docs/PLANO_MONETIZACAO*
+docs/ROADMAP.md
