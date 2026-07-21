@@ -59,19 +59,54 @@ Os arquivos de log e cache persistem em `%LOCALAPPDATA%\LegendOnlineLauncher`.
 
 ## 💻 Instalação e Compilação
 
-### Requisitos de Desenvolvimento
-- Python 3.x
-- Dependências: `pip install PyQt5 PyQtWebEngine pyinstaller pillow`
-- Arquivo PPAPI Flash `pepflashplayer.dll` na raiz do projeto (Windows) ou `libpepflashplayer.so` (Linux).
+### 🪟 1. Execução no Windows
+1. Acesse as [Releases Oficiais no GitHub](https://github.com/Bacon-Knight/Smart_Laucher_LegendOnline/releases/latest).
+2. Baixe o executável **`LegendOnlineLauncher_v2.2.exe`**.
+3. Execute diretamente com dois cliques (não requer instalação prévia).
 
-### Compilação Standalone (`.exe`)
+---
+
+### 🐧 2. Compilação e Instalação no Ubuntu / Linux (Na Própria Máquina)
+
+Para compilar e gerar os pacotes nativos para **Ubuntu** ou distros baseadas em Debian/Linux:
+
+#### 📋 Passo 1: Instalar as Dependências do Sistema
+No terminal do Linux:
 ```bash
-pyinstaller --noconsole --onefile --icon="bacon_knight.ico" --add-data "style.qss;." --add-data "pepflashplayer.dll;." --add-data "Ferramentas;Ferramentas" --add-data "bacon_knight.ico;." --add-data "src/assets;src/assets" --name "LegendOnlineLauncher_v2.2" src/main.py
-
+sudo apt update
+sudo apt install python3 python3-pip python3-pyqt5 python3-pyqt5.qtwebengine
+pip install pyinstaller pillow
 ```
 
+#### 🛠️ Passo 2: Clonar o Repositório e Executar o Script Automático
+```bash
+git clone https://github.com/Bacon-Knight/Smart_Laucher_LegendOnline.git
+cd Smart_Laucher_LegendOnline
+chmod +x build_fixed.sh
+./build_fixed.sh
+```
+
+#### 📦 Passo 3: Instalar o pacote `.deb` gerado
+Após a execução do script, instale o pacote gerado na sua máquina:
+```bash
+sudo dpkg -i legend-online-launcher_2.2.0_amd64.deb
+```
+Ou execute o pacote portátil **`AppImage`**:
+```bash
+chmod +x Legend-Online-Launcher-v2.2-x86_64.AppImage
+./Legend-Online-Launcher-v2.2-x86_64.AppImage
+```
+
+---
+
+### 🛠️ 3. Compilação Manual no Windows (`.exe`)
+```bash
+pyinstaller --noconfirm LegendOnlineLauncher_v2.2.spec
+```
+
+---
+
 ## 📚 Documentação Complementar
-- 👉 Contexto e decisões para IAs/LLMs: `docs/AI_CONTEXT.md`
-- 👉 Análise detalhada da arquitetura: `docs/ANALISE_DO_PROJETO.md`
-- 👉 Manual de instruções do usuário final: `docs/MANUAL_DE_USO.md`
-- 👉 Plano de desenvolvimento e futuro: `docs/ROADMAP.md`
+- 👉 **Manual de Instruções do Usuário Final:** [`docs/MANUAL_DE_USO.md`](file:///c:/Users/mariano/Documents/Launcher/docs/MANUAL_DE_USO.md)
+- 👉 **Landing Page Oficial:** [`docs/index.html`](file:///c:/Users/mariano/Documents/Launcher/docs/index.html)
+- ⚡ **Apoiar o Desenvolvedor:** [Livepix (PIX)](https://livepix.gg/baconknigth)
