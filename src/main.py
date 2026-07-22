@@ -13,12 +13,13 @@ from PyQt5.QtGui import QIcon
 from src.core.logger import get_logger, setup_global_exception_handler
 from src.core.config import resource_path
 from src.core.webengine import setup_webengine_environment, enable_webengine_plugins
-from src.ui.launcher_hub import LauncherHub
+from src.controllers.hub_controller import HubController
+from src.ui.views.hub_view import HubView
 
 def main() -> None:
     setup_global_exception_handler()
     logger = get_logger("Main")
-    logger.info("Iniciando o Launcher Legend Online...")
+    logger.info("Iniciando o Launcher Legend Online (Arquitetura MVC)...")
     
     # Configura argumentos do Chromium antes de instanciar o QApplication
     setup_webengine_environment()
@@ -39,10 +40,11 @@ def main() -> None:
     if os.path.exists(icon_path):
         app.setWindowIcon(QIcon(icon_path))
 
-    window = LauncherHub()
+    controller = HubController()
+    window = HubView(controller)
     window.show()
     
-    logger.info("Launcher carregado com sucesso.")
+    logger.info("Launcher MVC carregado com sucesso.")
     sys.exit(app.exec_())
 
 

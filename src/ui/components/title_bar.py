@@ -99,13 +99,6 @@ class CustomTitleBar(QWidget):
             self.layout.addWidget(self.btn_float)
             self.layout.addWidget(self.btn_tray)
 
-            # Indicador de Ping
-            self.ping_label = QLabel("📶 --")
-            self.ping_label.setObjectName("PingLabel")
-            self.ping_label.setToolTip("Ping ao servidor (atualiza a cada 30s)")
-            self.ping_label.setStyleSheet("color: #666; font-size: 10px; padding: 0 4px;")
-            self.layout.addWidget(self.ping_label)
-
             spacer = QWidget()
             spacer.setFixedWidth(4)
             self.layout.addWidget(spacer)

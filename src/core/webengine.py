@@ -25,8 +25,8 @@ def get_chromium_flags() -> List[str]:
         "--enable-gpu-rasterization",
         "--enable-zero-copy",
         "--disable-site-isolation-trials",
-        "--renderer-process-limit=4",
-        "--js-flags=--max-old-space-size=2048",
+        "--renderer-process-limit=6",
+        "--js-flags=--max-old-space-size=1024",
         "--disable-logging",
         "--disable-gpu-memory-buffer-video-frames",
         "--enable-gpu-compositing",
@@ -37,7 +37,10 @@ def get_chromium_flags() -> List[str]:
         "--disable-domain-reliability",
         "--disable-sync",
         "--disable-client-side-phishing-detection",
-        "--disable-hang-monitor"
+        "--disable-hang-monitor",
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding"
     ]
     return flags
 

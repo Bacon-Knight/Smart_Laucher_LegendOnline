@@ -20,8 +20,13 @@ def get_logger(name: str = "Launcher") -> logging.Logger:
         
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         
-        # Console Handler
-        ch = logging.StreamHandler(sys.stdout)
+        # Console Handler com encoding seguro para Windows
+        import io
+        if hasattr(sys.stdout, 'buffer'):
+            stream = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        else:
+            stream = sys.stdout
+        ch = logging.StreamHandler(stream)
         ch.setLevel(logging.INFO)
         ch.setFormatter(formatter)
         logger.addHandler(ch)

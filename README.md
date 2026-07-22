@@ -1,61 +1,58 @@
 <div align="center">
   <img src="docs/assets/logo.png" alt="Logo Bacon Knight" width="150" />
   <h1>Legend Online - Bacon Knight Launcher</h1>
-  <p><strong>Desenvolvido com Foco Extremo em Performance, Multi-Boxing, Otimização de Memória e Macros Background</strong></p>
+  <p><strong>Desenvolvido em Arquitetura MVC com Foco Extremo em Performance Multi-Boxing, Otimização de RAM e Auto-Relog Inteligente</strong></p>
 </div>
 
 ---
 
-O **Legend Online Custom Launcher** foi desenvolvido com o propósito de substituir ferramentas desatualizadas e permitir o acesso definitivo e sem bugs ao jogo em 2026+. Ele é construído em cima de **Python 3** e do motor C++ do **Chromium** embedado via PyQt5, trazendo consigo o Plugin PPAPI do Adobe Flash Player de forma nativa, segura e de alto desempenho.
+O **Legend Online Custom Launcher (v2.2)** foi desenvolvido para fornecer o acesso definitivo, sem bugs e de altíssimo desempenho ao jogo. Construído em **Python 3** sobre a arquitetura **MVC (Model-View-Controller)** com motor C++ do **Chromium** embedado via PyQt5, trazendo consigo o Plugin PPAPI do Adobe Flash Player de forma nativa e acelerada por hardware GPU.
 
-## ✨ Por que este Launcher? (Diferenciais)
+## ✨ Por que este Launcher? (Diferenciais da v2.2)
 
-- **UI Gamer (Frameless):** Interface limpa sem as bordas quadradas padrões do sistema. Janela totalmente arrastável, redimensionável (pelas extremidades) e com tema customizado (Roxo/Preto/Dourado).
-- **Multi-Sessões Isoladas (Multi-Boxing):** Você pode jogar com dezenas de contas ao mesmo tempo. Cada "Janela de Jogo" possui um *Profile Chromium Independente*, impedindo que o cookie de login de uma deslogue a outra.
-- **Otimização Extrema de Desempenho (Zero Lag):** Motor Chromium configurado com 2048 MB de Heap JS V8 (sem o lag de 15 minutos), aceleração gráfica por GPU ativada (`--enable-gpu-compositing`) e desativação de processos pesados em segundo plano.
-- **Gerenciamento de Contas Inteligente:** O Hub inicial oferece formulário rápido e grade visual de cartões de conta. Salva e gerencia E-mail, Senha, Servidor e Nickname com atalhos de 1 clique.
-- **Injeção Automática de Login:** Lê as credenciais salvas, carrega a página do servidor e envia pacotes de JavaScript sanitizados diretamente no DOM para login automático sem esforço.
-- **Auto-Zoom Matemático:** O jogo redimensiona os gráficos proporcionalmente sem cortá-los, garantindo visão 100% em qualquer resolução ou layout de tela dividida.
-- **Privacidade e Logs Seguros:** Anonimização automática de e-mails em logs de diagnóstico e recuperação automática de erros não tratados.
-
-## 🤖 Sistema de Macros Embutido (Invisível & Background)
-
-A automação não utiliza o ponteiro físico do mouse do sistema operacional. As macros disparam pacotes diretamente para a renderização interna da página via `QCoreApplication.postEvent`. **Os macros funcionam com o jogo minimizado!**
-
-1. **AutoClicker Fantasma (F4):** Clique contínuo em coordenadas específicas em segundo plano.
-2. **Formação Mágica (Macro 5x5):** Robô autônomo baseado em Geometria Isométrica. Mapeia 25 pontos do tabuleiro a partir do centro e dispara ataques cadenciados.
-3. **Gravador de Macro Customizável (F7/F8):** Gravação em tempo real de cliques e teclas com precisão milimétrica de atrasos. Reprodução por F8 e parada instantânea por F4.
-4. **Auto-Luta Inteligente (F5):** Algoritmo de visão computacional otimizado que analisa recortes leves (`QRect`) da barra de combate para engajar automaticamente em batalhas.
-
-## 🛡️ Diagnóstico, Erros e Notificação de Crashes
-
-O Launcher conta com um sistema avançado de resiliência e diagnóstico:
-- **Códigos de Erro Estruturados:** Erros são categorizados em códigos padrão (ex: `ERR-QT-501` para liberação de componentes Qt, `ERR-NET-400` para rede, `ERR-MEM-500` para estouro de memória).
-- **Relatório de Crash ao Reabrir:** Se a aplicação for interrompida por uma exceção não tratada, ao reabrir o Launcher uma janela informativa é exibida com o código do erro, o caminho do arquivo de log e o botão **"📁 Abrir Pasta do Log"**.
-- **Logs Anônimos e Seguros:** E-mails de usuários são mascarados nos arquivos de log (ex: `e******1@gmail.com`) e senhas nunca são registradas em disco.
-
-## 🕵️‍♂️ Modo Furtivo & Stealth
-- **Minimização Stealth:** Ao pressionar `Ctrl+Shift+A` ou após inatividade prolongada, a janela do jogo e o Hub desaparecem da barra de tarefas e passam a rodar silenciosamente na bandeja do sistema (*System Tray*).
-
-## 🛠️ Ferramentas In-Game
-Pelo menu de ferramentas (`🛠`) na barra de título da janela do jogo, é possível acessar:
-- Galerias flutuantes de **Planos de Crise** e **Plantas das Minas** (Atual, Baixo/Médio, Grande).
-- **Fast Relog (🔄 / 🧹):** Descarregamento e limpeza instantânea da memória RAM com acionamento do Garbage Collector em menos de 1 segundo.
-- Indicador de **Ping em Tempo Real** do servidor.
+- **Arquitetura MVC Modular:** Separação completa entre Dados/Regras (`models/`), Controladores de Aplicação (`controllers/`) e Interfaces Gráficas (`ui/views/`).
+- **Multi-Boxing com Cache Isolado (Zero Travamentos):** Jogue com dezenas de contas simultâneas. Cada conta possui seu perfil e diretório de cache de disco totalmente isolados, eliminando colisões de arquivo (*file locks*) no Windows.
+- **Auto-Relog Inteligente Pré-Eventos:**
+  - **Proteção de Horários de Eventos:** Impede desconexões durante os eventos principais (`11:00`, `13:00`, `15:00`, `17:00`, `19:00` e `21:35`).
+  - **Disparo Preventivo de 15 Minutos:** Executa a reciclagem de memória **15 minutos antes** dos eventos (`10:45`, `12:45`, `14:45`, `16:45`, `18:45` e `21:20`), garantindo o jogo com RAM zerada na hora da batalha.
+  - **Aviso com Contagem Regressiva de 15s (`RelogPromptDialog`):** Exibe um diálogo flutuante informando o motivo do relog com as opções: **[ ▶ Relogar Agora ]**, **[ ⏰ Adiar +30 min ]** e **[ ✕ Cancelar ]**. Se o jogador estiver AFK, o relog é concluído automaticamente.
+- **Otimização Extrema de RAM e GPU:** Flags do Chromium ajustadas (`--disable-background-timer-throttling`, `--js-flags=--max-old-space-size=1024`) para evitar congelamentos ao alternar entre janelas em segundo plano.
+- **Auto-Zoom com Debounce:** Redimensionamento suave sem travamentos durante o arraste das janelas.
+- **Gerenciamento de Contas Inteligente:** Hub inicial com formulário rápido, grade visual de cartões de conta e injeção automática de login sanitizado via JavaScript.
+- **Inatividade Furtiva & AFK Manager:** Modo Chefe (`Ctrl+Shift+A`) e ocultamento automático para a bandeja do sistema (*System Tray*).
 
 ---
 
-## 🧠 Arquitetura do Projeto
+## 🤖 Sistema de Macros Embutido (Invisível & Background)
+
+A automação dispara pacotes diretamente para o motor gráfico da página via `QCoreApplication.postEvent`. **Os macros funcionam com o jogo minimizado sem sequestrar o mouse do SO!**
+
+1. **AutoClicker Fantasma (F4):** Clique contínuo em coordenadas específicas em segundo plano.
+2. **Formação Mágica (Macro 5x5):** Mapeia 25 pontos do tabuleiro isométrico a partir do centro e dispara ataques cadenciados.
+3. **Gravador de Macro Customizável (F7/F8):** Gravação em tempo real de cliques e teclas com precisão milimétrica de atrasos. Reprodução por F8 e parada instantânea por F4.
+
+---
+
+## 🛠️ Ferramentas In-Game
+
+Pelo menu de ferramentas (`🛠`) na barra de título ou pelo painel flutuante (`⚡`), é possível acessar:
+- Galerias de **Planos de Crise** e **Plantas das Minas** (Atual, Baixo/Médio, Grande).
+- **Fast Relog (🔄 / 🧹):** Descarregamento da aba para `about:blank` com acionamento do *Garbage Collector* para liberar a RAM do Flash Player em menos de 1 segundo.
+
+---
+
+## 🧠 Arquitetura do Projeto (MVC)
 
 A base de código está organizada sob o diretório `src/`:
-- **`src/core/`**: Gerenciador de macros em threads secundárias (`macros.py`), configurações do Chromium/WebEngine (`webengine.py`), constantes (`config.py`) e registrador central de logs (`logger.py`).
-- **`src/models/`**: Dataclasses e modelos de dados para contas de usuário (`account.py`).
+- **`src/models/`**: Modelos de dados e regras de negócio (`account.py`, `game_session.py`, `relog_schedule.py`).
+- **`src/controllers/`**: Controladores que coordenam as regras da aplicação (`hub_controller.py`, `game_controller.py`).
+- **`src/ui/views/`**: Telas de interface gráfica desacopladas (`hub_view.py`, `game_view.py`).
+- **`src/ui/components/`**: Componentes reutilizáveis de UI (`title_bar.py`, `dialogs.py`, `floating_macro.py`, `frameless.py`).
 - **`src/services/`**: Serviços desacoplados de persistência em `QSettings` (`account_service.py`).
-- **`src/assets/`**: Scripts JavaScript externos (`js/login.js`) e ícones do sistema.
-- **`src/ui/`**: Hub do Launcher (`launcher_hub.py`), janelas de jogo isoladas (`game_window.py`), componentes visuais (`title_bar.py`, `frameless.py`, `dialogs.py`) e painel flutuante de macros (`floating_macro.py`).
-- **`src/main.py`**: Ponto de entrada limpo e inicializador da aplicação.
+- **`src/core/`**: Utilitários do sistema, loggers e WebEngine (`webengine.py`, `logger.py`, `macros.py`, `config.py`).
+- **`src/main.py`**: Ponto de entrada e bootstrap da aplicação.
 
-Os arquivos de log e cache persistem em `%LOCALAPPDATA%\LegendOnlineLauncher`.
+---
 
 ## 💻 Instalação e Compilação
 
@@ -68,10 +65,7 @@ Os arquivos de log e cache persistem em `%LOCALAPPDATA%\LegendOnlineLauncher`.
 
 ### 🐧 2. Compilação e Instalação no Ubuntu / Linux (Na Própria Máquina)
 
-Para compilar e gerar os pacotes nativos para **Ubuntu** ou distros baseadas em Debian/Linux:
-
 #### 📋 Passo 1: Instalar as Dependências do Sistema
-No terminal do Linux:
 ```bash
 sudo apt update
 sudo apt install python3 python3-pip python3-pyqt5 python3-pyqt5.qtwebengine
@@ -86,13 +80,12 @@ chmod +x build_fixed.sh
 ./build_fixed.sh
 ```
 
-#### 📦 Passo 3: Instalar o pacote `.deb` gerado
-Após a execução do script, instale o pacote gerado na sua máquina:
+#### 📦 Passo 3: Instalar o pacote `.deb` ou rodar o `AppImage`
 ```bash
+# Instalar o pacote Debian/Ubuntu:
 sudo dpkg -i legend-online-launcher_2.2.0_amd64.deb
-```
-Ou execute o pacote portátil **`AppImage`**:
-```bash
+
+# Ou executar o AppImage portátil:
 chmod +x Legend-Online-Launcher-v2.2-x86_64.AppImage
 ./Legend-Online-Launcher-v2.2-x86_64.AppImage
 ```
@@ -101,12 +94,13 @@ chmod +x Legend-Online-Launcher-v2.2-x86_64.AppImage
 
 ### 🛠️ 3. Compilação Manual no Windows (`.exe`)
 ```bash
-pyinstaller --noconfirm LegendOnlineLauncher_v2.2.spec
+python -m PyInstaller --noconfirm LegendOnlineLauncher_v2.2.spec
 ```
 
 ---
 
 ## 📚 Documentação Complementar
 - 👉 **Manual de Instruções do Usuário Final:** [`docs/MANUAL_DE_USO.md`](file:///c:/Users/mariano/Documents/Launcher/docs/MANUAL_DE_USO.md)
+- 👉 **Análise Técnica da Arquitetura:** [`docs/ANALISE_DO_PROJETO.md`](file:///c:/Users/mariano/Documents/Launcher/docs/ANALISE_DO_PROJETO.md)
 - 👉 **Landing Page Oficial:** [`docs/index.html`](file:///c:/Users/mariano/Documents/Launcher/docs/index.html)
 - ⚡ **Apoiar o Desenvolvedor:** [Livepix (PIX)](https://livepix.gg/baconknigth)

@@ -1,33 +1,42 @@
 import os
 import time
 import json
-from PyQt5.QtCore import Qt, QUrl, QSettings, QTimer, QPoint, QCoreApplication, QEvent, QRect
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QMessageBox, QShortcut, QSystemTrayIcon, QMenu, QAction
+from PyQt5.QtCore import Qt, QUrl, QTimer, QPoint, QEvent
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QShortcut, QSystemTrayIcon, QMenu, QAction
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings, QWebEngineProfile, QWebEnginePage
-from PyQt5.QtGui import QColor, QFont, QCursor, QMouseEvent, QPixmap, QIcon, QPainter, QKeySequence
+from PyQt5.QtGui import QIcon, QKeySequence
 
 from src.core.logger import get_logger, mask_email
-from src.core.config import get_cache_dir, LOGIN_JS_SCRIPT, BRIGHT_COLORS, resource_path
-from src.core.macros import MacroWorker
+from src.core.config import get_cache_dir, LOGIN_JS_SCRIPT, resource_path
+from src.models.game_session import GameSession
+from src.controllers.game_controller import GameController
 from src.ui.components.frameless import FramelessWindowMixin
 from src.ui.components.title_bar import CustomTitleBar
 from src.ui.components.dialogs import ImageViewerDialog, CustomCloseDialog
 from src.ui.components.floating_macro import FloatingMacroPanel
 
+logger = get_logger("GameView")
 
-logger = get_logger("GameWindow")
+class GameView(QMainWindow, FramelessWindowMixin):
+    """
+    Camada VIEW da arquitetura MVC para a Janela do Jogo.
+    Focada exclusivamente na renderização do WebEngine, barra de título e atalhos.
+    Delega a lógica de relog, macros e sincronização para o GameController.
+    """
 
-class GameWindow(QMainWindow, FramelessWindowMixin):
-    def __init__(self, email, password, server_url, enable_cache, nick, bg_color):
+    def __init__(self, session: GameSession):
         super().__init__()
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
         
-        self.email = email
-        self.password = password
-        self.server_url = server_url
-        self.nick = nick
+        self.session = session
+        self.controller = GameController(session=session, view=self)
+        
+        self.email = session.email
+        self.password = session.password
+        self.server_url = session.url
+        self.nick = session.nickname
         self.is_muted = True
-        self.bg_color = bg_color
+        self.bg_color = session.color
         
         self.setGeometry(150, 150, 1040, 800)
         
@@ -82,21 +91,19 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
         self.browser = QWebEngineView()
         main_layout.addWidget(self.browser)
         
-        self.macro_worker = None
         self.timer_countdown = QTimer(self)
         self.timer_countdown.timeout.connect(self.update_countdown)
         self.countdown_val = 0
-        self.macro_type = None
         
         self.shortcut_stop = QShortcut(QKeySequence("F4"), self)
-        self.shortcut_stop.activated.connect(self.stop_macros)
-        
+        self.shortcut_stop.activated.connect(self.controller.stop_macros)
+
         self.shortcut_fullscreen = QShortcut(QKeySequence("F11"), self)
         self.shortcut_fullscreen.activated.connect(self.toggle_fullscreen)
         self.shortcut_relog = QShortcut(QKeySequence("Ctrl+R"), self)
-        self.shortcut_relog.activated.connect(self.fast_relog)
+        self.shortcut_relog.activated.connect(self.controller.fast_relog)
 
-        safe_email = "".join(c for c in email if c.isalnum() or c in ('@', '.', '_')).replace('@', '_')
+        safe_email = "".join(c for c in self.email if c.isalnum() or c in ('@', '.', '_')).replace('@', '_')
         if not safe_email:
             safe_email = "default_profile"
             
@@ -105,7 +112,7 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
         self.profile.setHttpUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36")
         self.profile.setHttpAcceptLanguage("pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7")
         
-        if enable_cache:
+        if self.session.enable_cache:
             cache_dir = get_cache_dir(safe_email)
             account_cache_dir = os.path.join(cache_dir, "cache")
             self.profile.setCachePath(account_cache_dir)
@@ -113,7 +120,7 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
             self.profile.setPersistentCookiesPolicy(QWebEngineProfile.ForcePersistentCookies)
             self.profile.setHttpCacheType(QWebEngineProfile.DiskHttpCache)
             self.profile.setHttpCacheMaximumSize(1024 * 1024 * 1024)
-            logger.info(f"[{mask_email(email)}] Cache e storage isolados em: {cache_dir}")
+            logger.info(f"[{mask_email(self.email)}] Cache e storage isolados em: {cache_dir}")
         else:
             self.profile.setHttpCacheType(QWebEngineProfile.NoCache)
             
@@ -127,11 +134,11 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
         self.setup_linux_frameless()
         self.browser.loadFinished.connect(self.inject_login)
         
-        logger.info(f"[{mask_email(email)}] Conectando no servidor: {server_url}")
-        self.browser.setUrl(QUrl(server_url))
+        logger.info(f"[{mask_email(self.email)}] Conectando no servidor: {self.server_url}")
+        self.browser.setUrl(QUrl(self.server_url))
         
         try:
-            with open(resource_path("style.qss"), "r") as f:
+            with open(resource_path("style.qss"), "r", encoding="utf-8") as f:
                 self.setStyleSheet(f.read())
         except Exception as e:
             logger.error(f"Failed to load style: {e}")
@@ -139,12 +146,28 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
         # Painel flutuante de macros
         self.floating_panel = FloatingMacroPanel(self)
 
+    # Propriedades de compatibilidade para o MacroWorker
+    @property
+    def macro_worker(self):
+        return self.controller.macro_worker
+
+    @macro_worker.setter
+    def macro_worker(self, value):
+        self.controller.macro_worker = value
+
+    @property
+    def macro_type(self):
+        return self.controller.macro_type
+
+    @macro_type.setter
+    def macro_type(self, value):
+        self.controller.macro_type = value
+
     def toggle_floating_panel(self):
         """Abre ou fecha o painel flutuante de macros."""
         if self.floating_panel.isVisible():
             self.floating_panel.hide()
         else:
-            # Posiciona próximo ao botão ⚡ da title bar na primeira abertura
             if not self.floating_panel.pos().x():
                 tb_global = self.title_bar.mapToGlobal(self.title_bar.rect().bottomLeft())
                 self.floating_panel.move(tb_global.x() + 20, tb_global.y() + 4)
@@ -152,15 +175,14 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
             self.floating_panel.raise_()
 
     def start_autoclicker(self):
-        self.stop_macros()
+        self.controller.stop_macros()
         self.macro_type = 'autoclick'
         self.countdown_val = 10
         self.title_bar.title.setText(f"🎯 Posicione o mouse onde deseja clicar em: {self.countdown_val}s")
         self.timer_countdown.start(1000)
 
-
     def start_formacao_magica(self):
-        self.stop_macros()
+        self.controller.stop_macros()
         self.macro_type = 'formacao'
         self.countdown_val = 5
         self.title_bar.title.setText(f"🧙‍♂️ Formação: Posicione o mouse no CENTRO (X Vermelho) em: {self.countdown_val}s")
@@ -175,10 +197,10 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
                 self.title_bar.title.setText(f"🧙‍♂️ Formação: Posicione o mouse no CENTRO (X Vermelho) em: {self.countdown_val}s")
         else:
             self.timer_countdown.stop()
-            center_pos = self.browser.mapFromGlobal(QCursor.pos())
-            
+            center_pos = self.browser.mapFromGlobal(self.cursor().pos())
             target_widget = self.browser.focusProxy() if self.browser.focusProxy() else self.browser
             
+            from src.core.macros import MacroWorker
             if self.macro_type == 'autoclick':
                 params = {'pos': center_pos, 'interval': 1.0}
                 self.macro_worker = MacroWorker(target_widget, 'autoclick', params)
@@ -188,7 +210,7 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
                 self.macro_worker = MacroWorker(target_widget, 'formacao', params)
                 
             self.macro_worker.status_update.connect(self.title_bar.title.setText)
-            self.macro_worker.finished.connect(self.stop_macros)
+            self.macro_worker.finished.connect(self.controller.stop_macros)
             self.macro_worker.start()
 
     def calculate_formacao(self, center_pos):
@@ -211,15 +233,11 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
                 
         return priorities[1] + priorities[2]
 
-    def stop_macros(self):
-        self.timer_countdown.stop()
-        if self.macro_worker and self.macro_worker.isRunning():
-            self.macro_worker.stop()
-            self.macro_worker.wait()
-            self.macro_worker = None
-            
-        display_name = self.nick if self.nick else self.email
-        self.title_bar.title.setText(f"Legend Online - Jogando como: {display_name}")
+    def fast_relog(self):
+        self.controller.fast_relog()
+
+    def relog(self):
+        self.browser.reload()
 
     def toggle_fullscreen(self):
         if self.isFullScreen():
@@ -237,31 +255,9 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
         self.title_bar.btn_mute.setText("🔇" if self.is_muted else "🔊")
 
     def open_image_viewer(self, rel_folder_path):
-        from src.core.config import resource_path
         abs_path = resource_path(rel_folder_path)
         viewer = ImageViewerDialog(abs_path, self)
         viewer.exec_()
-
-    def relog(self):
-        logger.info(f"[{mask_email(self.email)}] Recarregando a página...")
-        self.browser.reload()
-
-
-
-    def fast_relog(self):
-        import gc
-        logger.info(f"[{mask_email(self.email)}] Limpando Memória (Fast Relog)...")
-        # Descarrega o jogo da memória para liberar RAM instantaneamente
-        self.browser.setUrl(QUrl("about:blank"))
-        gc.collect()
-        # Recarrega o portal após meio segundo para pegar um token novo
-        QTimer.singleShot(500, lambda: self.browser.setUrl(QUrl(self.server_url)))
-
-
-    def clear_cache(self):
-        logger.info(f"[{mask_email(self.email)}] Limpando cache do navegador...")
-        self.profile.clearHttpCache()
-        QMessageBox.information(self, "Cache", "Cache do navegador limpo com sucesso!")
 
     def inject_login(self, ok):
         if ok and self.email and self.password:
@@ -354,14 +350,15 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
     def play_custom_macro(self):
         if not self.recorded_macro_events:
             return
-        self.stop_macros()
+        self.controller.stop_macros()
         self.macro_type = 'custom'
         self.title_bar.title.setText("▶️ TOCANDO MACRO... (F4 para parar)")
         target_widget = self.browser.focusProxy() if self.browser.focusProxy() else self.browser
         params = {'queue': self.recorded_macro_events}
+        from src.core.macros import MacroWorker
         self.macro_worker = MacroWorker(target_widget, 'custom', params)
         self.macro_worker.status_update.connect(self.title_bar.title.setText)
-        self.macro_worker.finished.connect(self.stop_macros)
+        self.macro_worker.finished.connect(self.controller.stop_macros)
         self.macro_worker.start()
 
     def resizeEvent(self, event):
@@ -370,26 +367,13 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
             if not hasattr(self, '_zoom_timer'):
                 self._zoom_timer = QTimer(self)
                 self._zoom_timer.setSingleShot(True)
-                self._zoom_timer.timeout.connect(self._apply_zoom)
+                self._zoom_timer.timeout.connect(self.controller.apply_zoom_debounced)
             self._zoom_timer.start(150)
 
-    def _apply_zoom(self):
-        if getattr(self, '_is_closing', False) or not hasattr(self, 'page') or self.page is None:
-            return
-        try:
-            base_width = 1040.0
-            base_height = 800.0
-            zoom_x = self.width() / base_width
-            zoom_y = self.height() / base_height
-            zoom_factor = max(0.2, min(zoom_x, zoom_y))
-            self.page.setZoomFactor(zoom_factor)
-        except Exception as e:
-            logger.debug(f"Erro ao aplicar zoom factor: {e}")
-
     def closeEvent(self, event):
-        if hasattr(self, 'macro_worker') and self.macro_worker is not None:
+        if hasattr(self.controller, 'macro_worker') and self.controller.macro_worker is not None:
             try:
-                self.stop_macros()
+                self.controller.stop_macros()
             except Exception as e:
                 logger.debug(f"Erro ao parar macros ao fechar: {e}")
 
@@ -431,9 +415,7 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
                 logger.error(f"Erro ao limpar: {e}")
             event.accept()
         elif dialog.result_action == "relog":
-            self.relog()
+            self.controller.fast_relog()
             event.ignore()
         else:
             event.ignore()
-
-

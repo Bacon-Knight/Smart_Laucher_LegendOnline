@@ -83,21 +83,14 @@ class FloatingMacroPanel(QWidget):
         card_layout.addWidget(sep)
 
         # -- AutoClick --
-        self.btn_autoclick = QPushButton("\U0001f3af AutoClick: OFF")
+        self.btn_autoclick = QPushButton("🎯 AutoClick: OFF")
         self.btn_autoclick.setCheckable(True)
         self.btn_autoclick.setStyleSheet(self._btn_style("#2b1b3d", "#482963"))
         self.btn_autoclick.toggled.connect(self._toggle_autoclick)
         card_layout.addWidget(self.btn_autoclick)
 
-        # -- Auto-Luta --
-        self.btn_autoluta = QPushButton("\u2694\ufe0f Auto-Luta: OFF")
-        self.btn_autoluta.setCheckable(True)
-        self.btn_autoluta.setStyleSheet(self._btn_style("#2b1b3d", "#482963"))
-        self.btn_autoluta.toggled.connect(self._toggle_autoluta)
-        card_layout.addWidget(self.btn_autoluta)
-
         # -- Fast Relog --
-        btn_relog = QPushButton("\U0001f504 Fast Relog")
+        btn_relog = QPushButton("🔄 Fast Relog")
         btn_relog.setStyleSheet(self._btn_style("#1a1a2e", "#2d6ca3"))
         btn_relog.clicked.connect(self.game_window.fast_relog)
         card_layout.addWidget(btn_relog)
@@ -124,10 +117,6 @@ class FloatingMacroPanel(QWidget):
         else:
             self.game_window.stop_macros()
 
-    def _toggle_autoluta(self, checked):
-        # Delega ao toggle_autoluta existente (que abre dialog se nao configurado)
-        self.game_window.toggle_autoluta()
-
     def _sync_state(self):
         """Mantém os botoes sincronizados com o estado real da GameWindow."""
         gw = self.game_window
@@ -140,17 +129,9 @@ class FloatingMacroPanel(QWidget):
         self.btn_autoclick.blockSignals(True)
         self.btn_autoclick.setChecked(autoclick_on)
         self.btn_autoclick.setText(
-            "\U0001f3af AutoClick: ON" if autoclick_on else "\U0001f3af AutoClick: OFF"
+            "🎯 AutoClick: ON" if autoclick_on else "🎯 AutoClick: OFF"
         )
         self.btn_autoclick.blockSignals(False)
-
-        autoluta_on = getattr(gw, "autoluta_active", False)
-        self.btn_autoluta.blockSignals(True)
-        self.btn_autoluta.setChecked(autoluta_on)
-        self.btn_autoluta.setText(
-            "\u2694\ufe0f Auto-Luta: ON" if autoluta_on else "\u2694\ufe0f Auto-Luta: OFF"
-        )
-        self.btn_autoluta.blockSignals(False)
 
     # ------------------------------------------------------------------
     # Drag (arrastar pelo cabecalho)

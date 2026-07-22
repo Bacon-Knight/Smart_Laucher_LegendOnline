@@ -1,6 +1,6 @@
-# 📖 Manual de Uso - Bacon Knight Launcher
+# 📖 Manual de Uso - Bacon Knight Launcher (v2.2)
 
-Bem-vindo ao manual oficial do **Bacon Knight Launcher (v2.2)**. Aqui você vai aprender a tirar o máximo de proveito do nosso sistema de multi-boxing, otimizações de performance, automação e stealth.
+Bem-vindo ao manual oficial do **Bacon Knight Launcher (v2.2)**. Aqui você vai aprender a tirar o máximo de proveito da nova arquitetura MVC, sistema de multi-boxing, Auto-Relog Inteligente, otimizações de performance e stealth.
 
 ---
 
@@ -8,19 +8,32 @@ Bem-vindo ao manual oficial do **Bacon Knight Launcher (v2.2)**. Aqui você vai 
 1. Ao abrir o aplicativo, você verá o **Hub de Contas** com formulário e cartões visuais.
 2. Preencha seus dados de acesso (E-mail e Senha) e escolha o Servidor.
 3. (Opcional) Digite um apelido/nick para organizar suas contas (ex: "Arqueiro Principal").
-4. Clique em **"Salvar e Adicionar Conta"**. A conta aparecerá na grade de cartões.
-5. Para jogar, basta clicar em **"▶ Entrar"** no cartão da conta. O Launcher fará o login automático para você!
+4. Clique em **" INICIAR JOGO "**. O Launcher salvará a conta na grade visual e fará o login automático!
+5. Para jogar com contas salvas anteriormente, basta clicar em **"▶ Entrar"** no cartão da conta na grade.
 
 ---
 
-## ⚡ 2. O Poder do Multi-Boxing (Várias Contas Simultâneas)
-Ao contrário de navegadores normais que misturam cookies ou desconectam contas simultâneas, o Launcher cria **ambientes isolados** para cada conta. 
-- Você pode abrir quantas contas desejar na grade e clicar em "Entrar" em todas elas.
-- Cada janela roda de forma independente com seu próprio perfil de dados, enquanto compartilha o cache de imagens/SWF para economizar banda da sua internet.
+## ⚡ 2. O Poder do Multi-Boxing com Cache Isolado
+Ao contrário de navegadores normais que misturam cookies ou desconectam contas simultâneas, o Launcher cria **ambientes 100% isolados** para cada conta. 
+- Cada janela roda de forma independente com seu próprio diretório de cache de disco (`cache/user_email/cache`), eliminando travamentos de colisão de arquivo no Windows.
+- Você pode abrir quantas contas desejar na grade e alternar entre elas com extrema fluidez.
 
 ---
 
-## 👻 3. Modo Stealth (Chefe Chegou!)
+## ⏰ 3. Auto-Relog Inteligente com Proteção de Eventos
+Para manter o jogo sempre rápido e evitar o vazamento de memória RAM do Flash Player, o Launcher inclui o **Auto-Relog Inteligente**:
+
+- **Proteção de Eventos Fictícios:** O Launcher **nunca** relogará durante os eventos principais do jogo (`11:00`, `13:00`, `15:00`, `17:00`, `19:00` e `21:35`).
+- **Disparo Preventivo (15 minutos antes):** O relog é agendado para **15 minutos antes** dos eventos (`10:45`, `12:45`, `14:45`, `16:45`, `18:45` e `21:20`), garantindo RAM zerada no início da batalha.
+- **Aviso de 15 Segundos (`RelogPromptDialog`):** Antes de executar o relog, uma janela avisará:
+  - **[ ▶ Relogar Agora ]**: Executa a limpeza da RAM imediatamente.
+  - **[ ⏰ Adiar +30 min ]**: Se você estiver em combate ou atividade, clique para adiar em 30 minutos.
+  - **[ ✕ Cancelar ]**: Cancela o relog daquela rodada.
+  - *Se você estiver ausente (AFK), ao expirar os 15s o jogo reloga sozinho!*
+
+---
+
+## 👻 4. Modo Stealth (Chefe Chegou!)
 Precisa esconder o jogo rapidamente?
 - Pressione **`Ctrl + Shift + A`** em qualquer lugar do computador.
 - Instantaneamente, **TODAS** as janelas do jogo e o Hub desaparecerão da tela e da barra de tarefas.
@@ -29,7 +42,7 @@ Precisa esconder o jogo rapidamente?
 
 ---
 
-## 🎯 4. Macros em Segundo Plano (Background Clicker)
+## 🎯 5. Macros em Segundo Plano (Background Clicker)
 As automações do Launcher injetam eventos diretamente no motor gráfico do jogo sem sequestrar o mouse do seu computador.
 
 ### A. AutoClicker Fantasma (F4)
@@ -51,33 +64,25 @@ As automações do Launcher injetam eventos diretamente no motor gráfico do jog
 4. Pressione **F8** para reproduzir a automação.
 5. Pressione **F4** para interromper.
 
-### D. Auto-Luta Inteligente (F5 / Shift+F5)
-1. Pressione **Shift+F5** para configurar a sequência de teclas do seu personagem (ex: `1 2 3 4 5` ou `1 s 2 q`).
-2. Pressione **F5** para ativar o Auto-Luta. O algoritmo detectará quando seu personagem entrar em combate e disparará a sequência automaticamente.
-
 ---
 
-## 🧹 5. Limpeza de Memória & Fast Relog
-Se for manter o jogo aberto por muitas horas seguidas, utilize os botões da barra de título da janela do jogo:
+## 🧹 6. Limpeza de Memória & Fast Relog Manual
+Se quiser renovar a memória RAM da janela manualmente:
 - **`🔄` Recarregar Página:** Atualiza a aba mantendo a sessão.
-- **`🧹` Fast Relog (Limpeza de RAM):** Descarrega a aba da memória e a recarrega em menos de 1 segundo, ativando o Garbage Collector para liberar memória RAM ocupada pelo plugin Flash.
+- **`🧹` Fast Relog (Limpeza de RAM):** Descarrega a aba para `about:blank`, aciona o *Garbage Collector* e a recarrega em menos de 1 segundo.
 - **`🔇` Mudo Automático:** Clique no ícone de alto-falante para ativar ou desativar o áudio da aba.
 
 ---
 
-## 🛡️ 6. Relatórios de Diagnóstico, Logs e Privacidade
+## 🛡️ 7. Relatórios de Diagnóstico, Logs e Privacidade
 
 ### Onde ficam salvos os logs?
-Os arquivos de log do aplicativo são salvos automaticamente na pasta do sistema:  
 📂 `%LOCALAPPDATA%\LegendOnlineLauncher\launcher.log`  
 *(C:\Users\<seu_usuario>\AppData\Local\LegendOnlineLauncher\launcher.log)*
 
 ### Privacidade Garantida
 - **Senhas:** Jamais são gravadas nos arquivos de log.
-- **E-mails:** São anonimizados automaticamente ao gravar no log (ex: `e******1@gmail.com`), permitindo que você compartilhe os logs para suporte técnico sem expor seus dados.
-
-### Notificação de Crash
-Se o jogo ou o Launcher sofrer um encerramento inesperado, ao reabrir a aplicação uma janela avisará o ocorrido mostrando o código do erro (ex: `ERR-QT-501`) e disponibilizará o botão **"📁 Abrir Pasta do Log"** para abrir diretamente a pasta no Windows Explorer.
+- **E-mails:** São anonimizados automaticamente ao gravar no log (ex: `e******1@gmail.com`).
 
 ---
 

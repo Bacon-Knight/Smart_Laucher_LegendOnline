@@ -179,3 +179,117 @@ class CustomCloseDialog(QDialog):
     def action_close(self):
         self.result_action = "close"
         self.accept()
+
+
+class RelogPromptDialog(QDialog):
+    """
+    Diálogo flutuante exibido 15 segundos antes de um Auto-Relog programado.
+    Permite ao jogador:
+    - [▶ Relogar Agora]: Executa o relog imediatamente.
+    - [⏰ Adiar +30 min]: Adia o relog em 30 minutos.
+    - [✕ Cancelar]: Cancela a sessão atual do relog.
+    - Se o jogador estiver AFK, o timer de 15s estoura e aceita o relog automaticamente.
+    """
+
+    def __init__(self, reason_msg: str, countdown_secs: int = 15, parent=None):
+        super().__init__(parent)
+        from PyQt5.QtCore import QTimer
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.result_action = "relog"
+        self.countdown_val = countdown_secs
+
+        layout = QVBoxLayout(self)
+
+        self.main_card = QWidget()
+        self.main_card.setObjectName("MainCard")
+        self.main_card.setFixedWidth(420)
+
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(20)
+        shadow.setColor(QColor(72, 41, 99, 200))
+        shadow.setOffset(0, 0)
+        self.main_card.setGraphicsEffect(shadow)
+
+        card_layout = QVBoxLayout(self.main_card)
+        card_layout.setContentsMargins(18, 16, 18, 16)
+        card_layout.setSpacing(10)
+
+        lbl_header = QLabel("⚠️ Auto-Relog Programado")
+        lbl_header.setStyleSheet("color: #d9b855; font-size: 14px; font-weight: bold;")
+        lbl_header.setAlignment(Qt.AlignCenter)
+
+        self.lbl_msg = QLabel(
+            f"O jogo será recarregado em <b>{self.countdown_val}s</b> para otimização de RAM.<br>"
+            f"<span style='color: #a893c4; font-size: 11px;'>Motivo: {reason_msg}</span>"
+        )
+        self.lbl_msg.setWordWrap(True)
+        self.lbl_msg.setAlignment(Qt.AlignCenter)
+        self.lbl_msg.setStyleSheet("color: white; font-size: 12px;")
+
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(8)
+
+        self.btn_now = QPushButton("▶ Relogar Agora")
+        self.btn_now.setStyleSheet(
+            "QPushButton { background: #351554; border: 1px solid #c9a444; border-radius: 5px; color: white; padding: 6px; font-size: 11px; }"
+            "QPushButton:hover { background: #5c3285; }"
+        )
+        self.btn_now.clicked.connect(self.action_relog_now)
+
+        self.btn_postpone = QPushButton("⏰ Adiar +30 min")
+        self.btn_postpone.setStyleSheet(
+            "QPushButton { background: #1a1028; border: 1px solid #482963; border-radius: 5px; color: #d9b855; padding: 6px; font-size: 11px; }"
+            "QPushButton:hover { border-color: #c9a444; }"
+        )
+        self.btn_postpone.clicked.connect(self.action_postpone)
+
+        self.btn_cancel = QPushButton("✕ Cancelar")
+        self.btn_cancel.setStyleSheet(
+            "QPushButton { background: transparent; border: 1px solid #5c1616; border-radius: 5px; color: #ff4d4d; padding: 6px; font-size: 11px; }"
+            "QPushButton:hover { background: #5c1616; color: white; }"
+        )
+        self.btn_cancel.clicked.connect(self.action_cancel)
+
+        btn_layout.addWidget(self.btn_now)
+        btn_layout.addWidget(self.btn_postpone)
+        btn_layout.addWidget(self.btn_cancel)
+
+        card_layout.addWidget(lbl_header)
+        card_layout.addWidget(self.lbl_msg)
+        card_layout.addLayout(btn_layout)
+
+        layout.addWidget(self.main_card)
+
+        # Timer de contagem regressiva (1 por segundo)
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self._update_countdown)
+        self.timer.start(1000)
+
+    def _update_countdown(self):
+        self.countdown_val -= 1
+        if self.countdown_val > 0:
+            self.lbl_msg.setText(
+                f"O jogo será recarregado em <b>{self.countdown_val}s</b> para otimização de RAM.<br>"
+                f"<span style='color: #a893c4; font-size: 11px;'>Sua sessão será limpa e reiniciada.</span>"
+            )
+        else:
+            self.timer.stop()
+            self.result_action = "relog"
+            self.accept()
+
+    def action_relog_now(self):
+        self.timer.stop()
+        self.result_action = "relog"
+        self.accept()
+
+    def action_postpone(self):
+        self.timer.stop()
+        self.result_action = "postpone"
+        self.accept()
+
+    def action_cancel(self):
+        self.timer.stop()
+        self.result_action = "cancel"
+        self.reject()
+
