@@ -19,4 +19,15 @@ setTimeout(function() {
         }
         console.log("Credenciais injetadas pelo Custom Launcher!");
     }
+
+    // Auto-clique em botões de entrada/jogo caso esteja na lista de servidores
+    setTimeout(function() {
+        var playBtn = document.querySelector('.btn-play, .play-btn, .btn-enter, #btnPlay, .enter-game, .btn_start') ||
+                      document.evaluate("//a[contains(text(), 'Jogar') or contains(text(), 'Entrar') or contains(text(), 'Play')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue ||
+                      document.evaluate("//button[contains(text(), 'Jogar') or contains(text(), 'Entrar') or contains(text(), 'Play')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        if(playBtn && typeof playBtn.click === 'function') {
+            playBtn.click();
+            console.log("Botão de entrada no jogo clicado automaticamente!");
+        }
+    }, 1500);
 }, 1500);

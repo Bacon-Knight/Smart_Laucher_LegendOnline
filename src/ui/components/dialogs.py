@@ -183,27 +183,27 @@ class CustomCloseDialog(QDialog):
 
 class RelogPromptDialog(QDialog):
     """
-    Diálogo flutuante exibido 15 segundos antes de um Auto-Relog programado.
+    Diálogo flutuante exibido antes de um evento programado.
     Permite ao jogador:
-    - [▶ Relogar Agora]: Executa o relog imediatamente.
+    - [▶ Relogar Agora]: Executa o relog imediatamente para diminuir o lag.
     - [⏰ Adiar +30 min]: Adia o relog em 30 minutos.
-    - [✕ Cancelar]: Cancela a sessão atual do relog.
-    - Se o jogador estiver AFK, o timer de 15s estoura e aceita o relog automaticamente.
+    - [✕ Ignorar / Cancelar]: Cancela sem forçar relog.
     """
 
-    def __init__(self, reason_msg: str, countdown_secs: int = 15, parent=None):
+    def __init__(self, reason_msg: str, countdown_secs: int = 20, parent=None):
         super().__init__(parent)
         from PyQt5.QtCore import QTimer
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.result_action = "relog"
+        self.result_action = "cancel"
         self.countdown_val = countdown_secs
+        self.reason_msg = reason_msg
 
         layout = QVBoxLayout(self)
 
         self.main_card = QWidget()
         self.main_card.setObjectName("MainCard")
-        self.main_card.setFixedWidth(420)
+        self.main_card.setFixedWidth(430)
 
         shadow = QGraphicsDropShadowEffect()
         shadow.setBlurRadius(20)
@@ -213,40 +213,40 @@ class RelogPromptDialog(QDialog):
 
         card_layout = QVBoxLayout(self.main_card)
         card_layout.setContentsMargins(18, 16, 18, 16)
-        card_layout.setSpacing(10)
+        card_layout.setSpacing(12)
 
-        lbl_header = QLabel("⚠️ Auto-Relog Programado")
-        lbl_header.setStyleSheet("color: #d9b855; font-size: 14px; font-weight: bold;")
+        lbl_header = QLabel("⚠️ Aviso de Evento Próximo")
+        lbl_header.setStyleSheet("color: #d9b855; font-size: 15px; font-weight: bold;")
         lbl_header.setAlignment(Qt.AlignCenter)
 
         self.lbl_msg = QLabel(
-            f"O jogo será recarregado em <b>{self.countdown_val}s</b> para otimização de RAM.<br>"
-            f"<span style='color: #a893c4; font-size: 11px;'>Motivo: {reason_msg}</span>"
+            f"⚠️ <b>{self.reason_msg}</b> prestes a começar!<br>"
+            f"<span style='color: #ffffff; font-size: 13px;'>Deseja Efetuar o Relogin para diminuir o Lag?</span>"
         )
         self.lbl_msg.setWordWrap(True)
         self.lbl_msg.setAlignment(Qt.AlignCenter)
-        self.lbl_msg.setStyleSheet("color: white; font-size: 12px;")
+        self.lbl_msg.setStyleSheet("color: white; font-size: 13px; margin: 4px 0;")
 
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(8)
 
         self.btn_now = QPushButton("▶ Relogar Agora")
         self.btn_now.setStyleSheet(
-            "QPushButton { background: #351554; border: 1px solid #c9a444; border-radius: 5px; color: white; padding: 6px; font-size: 11px; }"
+            "QPushButton { background: #351554; border: 1px solid #c9a444; border-radius: 5px; color: white; padding: 7px; font-size: 11px; font-weight: bold; }"
             "QPushButton:hover { background: #5c3285; }"
         )
         self.btn_now.clicked.connect(self.action_relog_now)
 
         self.btn_postpone = QPushButton("⏰ Adiar +30 min")
         self.btn_postpone.setStyleSheet(
-            "QPushButton { background: #1a1028; border: 1px solid #482963; border-radius: 5px; color: #d9b855; padding: 6px; font-size: 11px; }"
+            "QPushButton { background: #1a1028; border: 1px solid #482963; border-radius: 5px; color: #d9b855; padding: 7px; font-size: 11px; }"
             "QPushButton:hover { border-color: #c9a444; }"
         )
         self.btn_postpone.clicked.connect(self.action_postpone)
 
-        self.btn_cancel = QPushButton("✕ Cancelar")
+        self.btn_cancel = QPushButton("✕ Ignorar")
         self.btn_cancel.setStyleSheet(
-            "QPushButton { background: transparent; border: 1px solid #5c1616; border-radius: 5px; color: #ff4d4d; padding: 6px; font-size: 11px; }"
+            "QPushButton { background: transparent; border: 1px solid #5c1616; border-radius: 5px; color: #ff4d4d; padding: 7px; font-size: 11px; }"
             "QPushButton:hover { background: #5c1616; color: white; }"
         )
         self.btn_cancel.clicked.connect(self.action_cancel)
@@ -261,35 +261,90 @@ class RelogPromptDialog(QDialog):
 
         layout.addWidget(self.main_card)
 
-        # Timer de contagem regressiva (1 por segundo)
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self._update_countdown)
-        self.timer.start(1000)
-
-    def _update_countdown(self):
-        self.countdown_val -= 1
-        if self.countdown_val > 0:
-            self.lbl_msg.setText(
-                f"O jogo será recarregado em <b>{self.countdown_val}s</b> para otimização de RAM.<br>"
-                f"<span style='color: #a893c4; font-size: 11px;'>Sua sessão será limpa e reiniciada.</span>"
-            )
-        else:
-            self.timer.stop()
-            self.result_action = "relog"
-            self.accept()
-
     def action_relog_now(self):
-        self.timer.stop()
         self.result_action = "relog"
         self.accept()
 
     def action_postpone(self):
-        self.timer.stop()
         self.result_action = "postpone"
         self.accept()
 
     def action_cancel(self):
-        self.timer.stop()
         self.result_action = "cancel"
         self.reject()
+
+
+class RAMLimitDialog(QDialog):
+    """
+    Diálogo leve exibido quando o consumo de RAM da instância do jogo passa do limite.
+    """
+
+    def __init__(self, ram_mb: int, limit_mb: int = 700, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.result_action = "cancel"
+
+        layout = QVBoxLayout(self)
+
+        self.main_card = QWidget()
+        self.main_card.setObjectName("MainCard")
+        self.main_card.setFixedWidth(410)
+
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(20)
+        shadow.setColor(QColor(72, 41, 99, 200))
+        shadow.setOffset(0, 0)
+        self.main_card.setGraphicsEffect(shadow)
+
+        card_layout = QVBoxLayout(self.main_card)
+        card_layout.setContentsMargins(18, 16, 18, 16)
+        card_layout.setSpacing(12)
+
+        lbl_header = QLabel("💡 Monitor de Memória RAM")
+        lbl_header.setStyleSheet("color: #d9b855; font-size: 14px; font-weight: bold;")
+        lbl_header.setAlignment(Qt.AlignCenter)
+
+        lbl_msg = QLabel(
+            f"Esta janela está consumindo <b>{ram_mb} MB</b> de RAM (Limite recomendado: {limit_mb} MB).<br><br>"
+            f"<span style='color: #ffffff; font-size: 13px;'>Deseja Efetuar o Relogin para diminuir o Lag?</span>"
+        )
+        lbl_msg.setWordWrap(True)
+        lbl_msg.setAlignment(Qt.AlignCenter)
+        lbl_msg.setStyleSheet("color: white; font-size: 12px;")
+
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(8)
+
+        btn_relog = QPushButton("🔄 Relogar Agora")
+        btn_relog.setStyleSheet(
+            "QPushButton { background: #351554; border: 1px solid #c9a444; border-radius: 5px; color: white; padding: 7px; font-size: 11px; font-weight: bold; }"
+            "QPushButton:hover { background: #5c3285; }"
+        )
+        btn_relog.clicked.connect(self.action_relog)
+
+        btn_ignore = QPushButton("✕ Agora Não")
+        btn_ignore.setStyleSheet(
+            "QPushButton { background: transparent; border: 1px solid #482963; border-radius: 5px; color: #a893c4; padding: 7px; font-size: 11px; }"
+            "QPushButton:hover { background: #482963; color: white; }"
+        )
+        btn_ignore.clicked.connect(self.action_ignore)
+
+        btn_layout.addWidget(btn_relog)
+        btn_layout.addWidget(btn_ignore)
+
+        card_layout.addWidget(lbl_header)
+        card_layout.addWidget(lbl_msg)
+        card_layout.addLayout(btn_layout)
+
+        layout.addWidget(self.main_card)
+
+    def action_relog(self):
+        self.result_action = "relog"
+        self.accept()
+
+    def action_ignore(self):
+        self.result_action = "cancel"
+        self.reject()
+
 

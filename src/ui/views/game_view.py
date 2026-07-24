@@ -24,12 +24,12 @@ class GameView(QMainWindow, FramelessWindowMixin):
     Delega a lógica de relog, macros e sincronização para o GameController.
     """
 
-    def __init__(self, session: GameSession):
+    def __init__(self, session: GameSession, stagger_index: int = 0):
         super().__init__()
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
         
         self.session = session
-        self.controller = GameController(session=session, view=self)
+        self.controller = GameController(session=session, view=self, stagger_index=stagger_index)
         
         self.email = session.email
         self.password = session.password
@@ -287,6 +287,8 @@ class GameView(QMainWindow, FramelessWindowMixin):
         self.activateWindow()
         self.tray_icon.hide()
         self.idle_timer.start(90000)
+        if hasattr(self, 'controller') and hasattr(self.controller, 'check_pending_afk_relog'):
+            self.controller.check_pending_afk_relog()
 
     def changeEvent(self, event):
         if event.type() == QEvent.WindowStateChange:

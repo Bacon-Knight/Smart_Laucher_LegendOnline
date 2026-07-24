@@ -59,6 +59,20 @@ class CustomTitleBar(QWidget):
             action_minas_grande.triggered.connect(lambda: self.parent.open_image_viewer("Ferramentas/Planos de Mina/Grande"))
             menu_minas.addAction(action_minas_grande)
             
+            menu_quality = self.tool_menu.addMenu("Qualidade Flash ▶")
+            
+            action_q_low = QAction("🔴 Baixa (Máximo Desempenho)", self)
+            action_q_low.triggered.connect(lambda: getattr(self.parent, 'controller', None) and self.parent.controller.set_flash_quality("low"))
+            menu_quality.addAction(action_q_low)
+            
+            action_q_med = QAction("🟡 Média (Intermediário)", self)
+            action_q_med.triggered.connect(lambda: getattr(self.parent, 'controller', None) and self.parent.controller.set_flash_quality("medium"))
+            menu_quality.addAction(action_q_med)
+            
+            action_q_high = QAction("🟢 Alta (Visual Completo)", self)
+            action_q_high.triggered.connect(lambda: getattr(self.parent, 'controller', None) and self.parent.controller.set_flash_quality("high"))
+            menu_quality.addAction(action_q_high)
+
             self.tool_menu.setStyleSheet("QMenu { background-color: #2b1b3d; color: white; border: 1px solid #c9a444; } QMenu::item:selected { background-color: #c9a444; color: black; }")
             self.btn_tools.setMenu(self.tool_menu)
             

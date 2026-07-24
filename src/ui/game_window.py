@@ -249,13 +249,14 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
 
 
     def fast_relog(self):
-        import gc
-        logger.info(f"[{mask_email(self.email)}] Limpando Memória (Fast Relog)...")
-        # Descarrega o jogo da memória para liberar RAM instantaneamente
-        self.browser.setUrl(QUrl("about:blank"))
-        gc.collect()
-        # Recarrega o portal após meio segundo para pegar um token novo
-        QTimer.singleShot(500, lambda: self.browser.setUrl(QUrl(self.server_url)))
+        if getattr(self, "_is_closing", False) or not hasattr(self, 'browser') or self.browser is None:
+            return
+
+        logger.info(f"[{mask_email(self.email)}] Recarregando sessão do jogo (Fast Relog)...")
+        try:
+            self.browser.setUrl(QUrl(self.server_url))
+        except Exception as e:
+            logger.error(f"Erro ao recarregar página no Fast Relog: {e}")
 
 
     def clear_cache(self):
@@ -271,6 +272,9 @@ class GameWindow(QMainWindow, FramelessWindowMixin):
             proxy = self.browser.focusProxy()
             if proxy:
                 proxy.installEventFilter(self)
+
+            # Aplica por padrão a qualidade Baixa (Máximo Desempenho para Multi-boxing) após o carregamento da página
+            QTimer.singleShot(3000, lambda: hasattr(self, 'controller') and self.controller.set_flash_quality("low"))
 
     def nativeEvent(self, eventType, message):
         handled, result = self.frameless_native_event(eventType, message)

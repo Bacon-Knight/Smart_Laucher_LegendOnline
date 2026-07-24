@@ -3,8 +3,10 @@ import ctypes
 import sys
 if sys.platform == 'win32':
     from ctypes import wintypes
+import urllib.request
+import urllib.error
 from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QComboBox, QLineEdit, QSystemTrayIcon, QMenu, QAction, QMessageBox, QGraphicsDropShadowEffect, QStyle, QApplication, QShortcut, QCheckBox, QScrollArea, QFrame
-from PyQt5.QtCore import Qt, QSettings, QPoint, QObject, QTimer, QUrl
+from PyQt5.QtCore import Qt, QSettings, QPoint, QObject, QTimer, QUrl, QThread, pyqtSignal
 from PyQt5.QtGui import QColor, QKeySequence, QDesktopServices
 
 from src.core.logger import get_logger
@@ -15,6 +17,33 @@ from src.ui.components.title_bar import CustomTitleBar
 from src.ui.game_window import GameWindow
 
 logger = get_logger("LauncherHub")
+
+CURRENT_APP_VERSION = "2.2"
+
+class UpdateCheckerThread(QThread):
+    """
+    Worker assíncrono para verificar se existe uma nova release no GitHub sem travar a UI.
+    """
+    update_signal = pyqtSignal(bool, str, str) # (has_update, latest_version, download_url)
+
+    def run(self):
+        try:
+            url = "https://api.github.com/repos/Bacon-Knight/Smart_Laucher_LegendOnline/releases/latest"
+            req = urllib.request.Request(url, headers={"User-Agent": "LegendOnlineLauncher"})
+            with urllib.request.urlopen(req, timeout=4) as response:
+                if response.status == 200:
+                    data = json.loads(response.read().decode("utf-8"))
+                    latest_tag = data.get("tag_name", "").strip().lstrip("v")
+                    html_url = data.get("html_url", "https://github.com/Bacon-Knight/Smart_Laucher_LegendOnline/releases")
+                    
+                    if latest_tag and latest_tag != CURRENT_APP_VERSION:
+                        self.update_signal.emit(True, latest_tag, html_url)
+                        return
+            self.update_signal.emit(False, CURRENT_APP_VERSION, "")
+        except Exception as e:
+            logger.debug(f"Verificação de atualização indisponível ou offline: {e}")
+            self.update_signal.emit(False, CURRENT_APP_VERSION, "")
+
 
 
 if sys.platform == 'win32':
@@ -89,6 +118,29 @@ class LauncherHub(QMainWindow):
         self.load_styles()
         QTimer.singleShot(600, self.check_previous_crash)
         QTimer.singleShot(1200, self.show_donation_popup)
+        QTimer.singleShot(1500, self.check_updates)
+
+    def check_updates(self):
+        """Inicia a verificação assíncrona de novas versões no GitHub."""
+        self.update_thread = UpdateCheckerThread(self)
+        self.update_thread.update_signal.connect(self.on_update_result)
+        self.update_thread.start()
+
+    def on_update_result(self, has_update: bool, latest_ver: str, download_url: str):
+        """Disparado quando a resposta da API do GitHub é recebida."""
+        if has_update:
+            logger.info(f"Nova versão encontrada no GitHub: v{latest_ver}")
+            self.btn_update = QPushButton(f"🚀 Nova v{latest_ver} Disponível!")
+            self.btn_update.setStyleSheet(
+                "QPushButton { background: #5c1616; border: 1px solid #ff4d4d; border-radius: 4px; color: white; font-weight: bold; padding: 2px 8px; font-size: 11px; }"
+                "QPushButton:hover { background: #ff4d4d; color: black; }"
+            )
+            self.btn_update.setToolTip("Uma nova versão do Launcher está disponível! Clique para baixar no GitHub.")
+            self.btn_update.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(download_url)))
+            
+            # Insere o botão de atualização na barra de título do Hub
+            if hasattr(self, 'title_bar') and hasattr(self.title_bar, 'layout'):
+                self.title_bar.layout.insertWidget(2, self.btn_update)
 
     def setup_tray(self):
         self.tray_icon = QSystemTrayIcon(self)

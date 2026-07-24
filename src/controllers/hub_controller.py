@@ -141,7 +141,8 @@ class HubController(QObject):
         )
 
         from src.ui.views.game_view import GameView
-        gw = GameView(session)
+        stagger_idx = len(self.game_windows)
+        gw = GameView(session, stagger_index=stagger_idx)
         self.game_windows.append(gw)
         gw.show()
         return gw
@@ -177,6 +178,8 @@ class HubController(QObject):
                 gw.showNormal()
                 gw.activateWindow()
                 gw.raise_()
+                if hasattr(gw, 'controller') and hasattr(gw.controller, 'check_pending_afk_relog'):
+                    gw.controller.check_pending_afk_relog()
             except Exception as e:
                 logger.debug(f"Erro ao exibir janela de jogo: {e}")
 
