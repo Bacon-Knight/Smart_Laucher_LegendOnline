@@ -6,9 +6,9 @@
 
 ---
 
-O **Legend Online Custom Launcher (v2.2)** foi desenvolvido para fornecer o acesso definitivo, sem bugs e de altíssimo desempenho ao jogo. Construído em **Python 3** sobre a arquitetura **MVC (Model-View-Controller)** com motor C++ do **Chromium** embedado via PyQt5, trazendo consigo o Plugin PPAPI do Adobe Flash Player de forma nativa e acelerada por hardware GPU.
+O **Legend Online Custom Launcher (v2.3)** foi desenvolvido para fornecer o acesso definitivo, sem bugs e de altíssimo desempenho ao jogo. Construído em **Python 3** sobre a arquitetura **MVC (Model-View-Controller)** com motor C++ do **Chromium** embedado via PyQt5, trazendo consigo o Plugin PPAPI do Adobe Flash Player de forma nativa e acelerada por hardware GPU.
 
-## ✨ Por que este Launcher? (Diferenciais da v2.2)
+## ✨ Por que este Launcher? (Diferenciais da v2.3)
 
 - **Arquitetura MVC Modular:** Separação completa entre Dados/Regras (`models/`), Controladores de Aplicação (`controllers/`) e Interfaces Gráficas (`ui/views/`).
 - **Multi-Boxing com Cache Isolado (Zero Travamentos):** Jogue com dezenas de contas simultâneas. Cada conta possui seu perfil e diretório de cache de disco totalmente isolados, eliminando colisões de arquivo (*file locks*) no Windows.

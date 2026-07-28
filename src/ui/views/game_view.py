@@ -97,6 +97,8 @@ class GameView(QMainWindow, FramelessWindowMixin):
         
         self.shortcut_stop = QShortcut(QKeySequence("F4"), self)
         self.shortcut_stop.activated.connect(self.controller.stop_macros)
+        self.shortcut_autoluta = QShortcut(QKeySequence("F5"), self)
+        self.shortcut_autoluta.activated.connect(self.start_autoluta)
 
         self.shortcut_fullscreen = QShortcut(QKeySequence("F11"), self)
         self.shortcut_fullscreen.activated.connect(self.toggle_fullscreen)
@@ -180,6 +182,25 @@ class GameView(QMainWindow, FramelessWindowMixin):
         self.countdown_val = 10
         self.title_bar.title.setText(f"🎯 Posicione o mouse onde deseja clicar em: {self.countdown_val}s")
         self.timer_countdown.start(1000)
+
+    def start_autoluta(self):
+        """Inicia a rotação de habilidades e combate automático em segundo plano."""
+        self.controller.stop_macros()
+        self.macro_type = 'autoluta'
+        target_widget = self.browser.focusProxy() if self.browser.focusProxy() else self.browser
+
+        from src.core.macros import MacroWorker
+        params = {
+            'skills': [
+                Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5,
+                Qt.Key_Q, Qt.Key_W, Qt.Key_E, Qt.Key_Space
+            ],
+            'interval': 0.8
+        }
+        self.macro_worker = MacroWorker(target_widget, 'autoluta', params)
+        self.macro_worker.status_update.connect(self.title_bar.title.setText)
+        self.macro_worker.finished.connect(self.controller.stop_macros)
+        self.macro_worker.start()
 
     def start_formacao_magica(self):
         self.controller.stop_macros()
@@ -372,6 +393,45 @@ class GameView(QMainWindow, FramelessWindowMixin):
                 self._zoom_timer.timeout.connect(self.controller.apply_zoom_debounced)
             self._zoom_timer.start(150)
 
+    def _cleanup_resources(self):
+        """Interrompe timers, oculta a bandeja do Windows e limpa componentes Qt/WebEngine."""
+        self._is_closing = True
+        try:
+            if hasattr(self, 'tray_icon') and self.tray_icon is not None:
+                self.tray_icon.hide()
+        except Exception as e:
+            logger.debug(f"Erro ao ocultar ícone da bandeja: {e}")
+
+        try:
+            if hasattr(self, 'idle_timer') and self.idle_timer:
+                self.idle_timer.stop()
+            if hasattr(self, 'controller') and self.controller:
+                if hasattr(self.controller, 'relog_timer') and self.controller.relog_timer:
+                    self.controller.relog_timer.stop()
+                if hasattr(self.controller, 'ram_timer') and self.controller.ram_timer:
+                    self.controller.ram_timer.stop()
+        except Exception as e:
+            logger.debug(f"Erro ao parar timers: {e}")
+
+        try:
+            if hasattr(self, 'hub_controller') and self.hub_controller:
+                self.hub_controller.unregister_game_window(self)
+        except Exception as e:
+            logger.debug(f"Erro ao desregistrar janela do hub: {e}")
+
+        try:
+            if hasattr(self, 'page') and self.page is not None:
+                self.page.deleteLater()
+                self.page = None
+            if hasattr(self, 'profile') and self.profile is not None:
+                self.profile.deleteLater()
+                self.profile = None
+            if hasattr(self, 'browser') and self.browser is not None:
+                self.browser.deleteLater()
+                self.browser = None
+        except Exception as e:
+            logger.error(f"Erro ao limpar recursos de WebEngine: {e}")
+
     def closeEvent(self, event):
         if hasattr(self.controller, 'macro_worker') and self.controller.macro_worker is not None:
             try:
@@ -380,20 +440,8 @@ class GameView(QMainWindow, FramelessWindowMixin):
                 logger.debug(f"Erro ao parar macros ao fechar: {e}")
 
         if getattr(self, 'force_close', False):
-            self._is_closing = True
             logger.info(f"[{mask_email(self.email)}] Limpando recursos de memória e fechando (Forçado)...")
-            try:
-                if hasattr(self, 'page') and self.page is not None:
-                    self.page.deleteLater()
-                    self.page = None
-                if hasattr(self, 'profile') and self.profile is not None:
-                    self.profile.deleteLater()
-                    self.profile = None
-                if hasattr(self, 'browser') and self.browser is not None:
-                    self.browser.deleteLater()
-                    self.browser = None
-            except Exception as e:
-                logger.error(f"Erro ao limpar forçado: {e}")
+            self._cleanup_resources()
             event.accept()
             return
             
@@ -401,20 +449,8 @@ class GameView(QMainWindow, FramelessWindowMixin):
         dialog.exec_()
         
         if dialog.result_action == "close":
-            self._is_closing = True
             logger.info(f"[{mask_email(self.email)}] Limpando recursos de memória e fechando...")
-            try:
-                if hasattr(self, 'page') and self.page is not None:
-                    self.page.deleteLater()
-                    self.page = None
-                if hasattr(self, 'profile') and self.profile is not None:
-                    self.profile.deleteLater()
-                    self.profile = None
-                if hasattr(self, 'browser') and self.browser is not None:
-                    self.browser.deleteLater()
-                    self.browser = None
-            except Exception as e:
-                logger.error(f"Erro ao limpar: {e}")
+            self._cleanup_resources()
             event.accept()
         elif dialog.result_action == "relog":
             self.controller.fast_relog()

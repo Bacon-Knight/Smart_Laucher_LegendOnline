@@ -18,7 +18,7 @@ from src.ui.game_window import GameWindow
 
 logger = get_logger("LauncherHub")
 
-CURRENT_APP_VERSION = "2.2"
+CURRENT_APP_VERSION = "2.3"
 
 class UpdateCheckerThread(QThread):
     """

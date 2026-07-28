@@ -1,6 +1,6 @@
-# 📖 Manual de Uso - Bacon Knight Launcher (v2.2)
+# 📖 Manual de Uso - Bacon Knight Launcher (v2.3)
 
-Bem-vindo ao manual oficial do **Bacon Knight Launcher (v2.2)**. Aqui você vai aprender a tirar o máximo de proveito da nova arquitetura MVC, sistema de multi-boxing, Auto-Relog Inteligente, otimizações de performance e stealth.
+Bem-vindo ao manual oficial do **Bacon Knight Launcher (v2.3)**. Aqui você vai aprender a tirar o máximo de proveito da nova arquitetura MVC, sistema de multi-boxing, Auto-Relog Inteligente, automação de Auto-Luta (F5), otimizações de performance e stealth.
 
 ---
 
@@ -52,12 +52,18 @@ As automações do Launcher injetam eventos diretamente no motor gráfico do jog
 4. O Launcher iniciará os cliques automáticos. **Você pode minimizar a janela do jogo e continuar usando o computador normalmente!**
 5. Para parar a qualquer momento, pressione **F4**.
 
-### B. Formação Mágica (Macro 5x5)
+### B. Auto-Luta Automática de Combate (F5)
+1. Na janela do jogo ou no painel flutuante (`⚡`), ative a **Auto-Luta (F5)**.
+2. O Launcher iniciará a rotação contínua e dinâmica das habilidades (`1, 2, 3, 4, 5`), runas (`Q, W, E`) e transformação de Sylph (`Espaço`).
+3. **Totalmente em segundo plano**: Os comandos são enviados diretamente para o motor Qt/Chromium sem sequestrar o mouse nem o teclado do seu sistema operacional.
+4. Para parar a qualquer momento, pressione **F4** ou pressione **F5** novamente.
+
+### C. Formação Mágica (Macro 5x5)
 1. Ative a **Formação Mágica** pelo menu `🛠`.
 2. Posicione o mouse no centro (X Vermelho) do tabuleiro durante a contagem regressiva de 5s.
 3. O robô calculará a perspectiva isométrica e executará a sequência nos 25 pontos.
 
-### C. Gravador de Macro Customizável (F7 / F8)
+### D. Gravador de Macro Customizável (F7 / F8)
 1. Pressione **F7** para iniciar a gravação. O título indicará "🔴 GRAVANDO MACRO...".
 2. Realize os cliques e digitações no jogo.
 3. Pressione **F7** novamente para salvar.

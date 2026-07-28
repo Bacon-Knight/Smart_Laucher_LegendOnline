@@ -89,6 +89,13 @@ class FloatingMacroPanel(QWidget):
         self.btn_autoclick.toggled.connect(self._toggle_autoclick)
         card_layout.addWidget(self.btn_autoclick)
 
+        # -- Auto-Luta --
+        self.btn_autoluta = QPushButton("⚔️ Auto-Luta (F5): OFF")
+        self.btn_autoluta.setCheckable(True)
+        self.btn_autoluta.setStyleSheet(self._btn_style("#2b1b3d", "#8c2a3e"))
+        self.btn_autoluta.toggled.connect(self._toggle_autoluta)
+        card_layout.addWidget(self.btn_autoluta)
+
         # -- Fast Relog --
         btn_relog = QPushButton("🔄 Fast Relog")
         btn_relog.setStyleSheet(self._btn_style("#1a1a2e", "#2d6ca3"))
@@ -115,23 +122,44 @@ class FloatingMacroPanel(QWidget):
         if checked:
             self.game_window.start_autoclicker()
         else:
-            self.game_window.stop_macros()
+            if hasattr(self.game_window, 'stop_macros'):
+                self.game_window.stop_macros()
+            elif hasattr(self.game_window, 'controller'):
+                self.game_window.controller.stop_macros()
+
+    def _toggle_autoluta(self, checked):
+        if checked:
+            self.game_window.start_autoluta()
+        else:
+            if hasattr(self.game_window, 'stop_macros'):
+                self.game_window.stop_macros()
+            elif hasattr(self.game_window, 'controller'):
+                self.game_window.controller.stop_macros()
 
     def _sync_state(self):
         """Mantém os botoes sincronizados com o estado real da GameWindow."""
         gw = self.game_window
 
-        autoclick_on = (
-            gw.macro_worker is not None
-            and gw.macro_worker.isRunning()
-            and getattr(gw, "macro_type", "") == "autoclick"
-        )
+        worker = getattr(gw, 'macro_worker', None)
+        if worker is None and hasattr(gw, 'controller'):
+            worker = getattr(gw.controller, 'macro_worker', None)
+
+        mtype = getattr(gw, 'macro_type', "")
+        if not mtype and hasattr(gw, 'controller'):
+            mtype = getattr(gw.controller, 'macro_type', "")
+
+        autoclick_on = (worker is not None and worker.isRunning() and mtype == "autoclick")
+        autoluta_on = (worker is not None and worker.isRunning() and mtype == "autoluta")
+
         self.btn_autoclick.blockSignals(True)
         self.btn_autoclick.setChecked(autoclick_on)
-        self.btn_autoclick.setText(
-            "🎯 AutoClick: ON" if autoclick_on else "🎯 AutoClick: OFF"
-        )
+        self.btn_autoclick.setText("🎯 AutoClick: ON" if autoclick_on else "🎯 AutoClick: OFF")
         self.btn_autoclick.blockSignals(False)
+
+        self.btn_autoluta.blockSignals(True)
+        self.btn_autoluta.setChecked(autoluta_on)
+        self.btn_autoluta.setText("⚔️ Auto-Luta (F5): ON" if autoluta_on else "⚔️ Auto-Luta (F5): OFF")
+        self.btn_autoluta.blockSignals(False)
 
     # ------------------------------------------------------------------
     # Drag (arrastar pelo cabecalho)

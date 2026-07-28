@@ -118,6 +118,14 @@ class HubController(QObject):
             self.settings.setValue("saved_accounts", json.dumps(saved))
         return saved
 
+    def unregister_game_window(self, gw):
+        """Remove uma janela de jogo da lista de janelas ativas."""
+        if gw in self.game_windows:
+            try:
+                self.game_windows.remove(gw)
+            except ValueError:
+                pass
+
     def launch_game(self, email: str, password: str, server_num: str, nick: str):
         """Instancia a sessão de jogo e abre a nova janela."""
         if not email or not server_num:
@@ -143,6 +151,8 @@ class HubController(QObject):
         from src.ui.views.game_view import GameView
         stagger_idx = len(self.game_windows)
         gw = GameView(session, stagger_index=stagger_idx)
+        gw.hub_controller = self
+        gw.destroyed.connect(lambda: self.unregister_game_window(gw))
         self.game_windows.append(gw)
         gw.show()
         return gw
@@ -159,6 +169,7 @@ class HubController(QObject):
             self.boss_hidden = True
             if self.view:
                 self.view.hide()
+            self.game_windows = [gw for gw in self.game_windows if not getattr(gw, '_is_closing', False)]
             for gw in self.game_windows:
                 try:
                     gw.hide()
@@ -173,6 +184,7 @@ class HubController(QObject):
         self.show_all_games()
 
     def show_all_games(self):
+        self.game_windows = [gw for gw in self.game_windows if not getattr(gw, '_is_closing', False)]
         for gw in self.game_windows:
             try:
                 gw.showNormal()
@@ -184,6 +196,7 @@ class HubController(QObject):
                 logger.debug(f"Erro ao exibir janela de jogo: {e}")
 
     def close_all_games(self):
+        self.game_windows = [gw for gw in self.game_windows if not getattr(gw, '_is_closing', False)]
         for gw in self.game_windows:
             try:
                 gw.close()

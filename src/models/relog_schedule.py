@@ -66,10 +66,13 @@ class RelogScheduler:
         secs_to_pre_event = max(10, int((next_pre_event_dt - now).total_seconds()))
 
         # 2. Compara com o intervalo padrão (2 horas = 7200 segundos)
-        default_secs = default_interval_mins * 60
+        # Se o aviso pré-evento estiver dentro de até (intervalo padrão + 30 min),
+        # agenda diretamente o evento para evitar relogs de rotina redundantes minutos antes.
+        max_routine_secs = (default_interval_mins + 30) * 60
 
-        if secs_to_pre_event < default_secs:
+        if secs_to_pre_event <= max_routine_secs:
             return secs_to_pre_event, f"Evento '{event_name}' (às {event_time})"
         else:
+            default_secs = default_interval_mins * 60
             return default_secs, f"Intervalo de rotina ({default_interval_mins} min)"
 

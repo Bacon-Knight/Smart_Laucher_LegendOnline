@@ -22,8 +22,46 @@ class MacroWorker(QThread):
             self.run_autoclicker()
         elif self.macro_type == 'formacao':
             self.run_formacao()
+        elif self.macro_type == 'autoluta':
+            self.run_autoluta()
         elif self.macro_type == 'custom':
             self.run_custom_macro()
+
+    def run_autoluta(self):
+        """
+        Executa a automação de combate (Auto-Luta):
+        Rotaciona teclas de habilidades (1, 2, 3, 4, 5), runas (Q, W, E) e ativação de Sylph (Espaço).
+        Funciona em segundo plano diretamente via eventos do Qt.
+        """
+        skills = self.params.get('skills', [
+            Qt.Key_1, Qt.Key_2, Qt.Key_3, Qt.Key_4, Qt.Key_5,
+            Qt.Key_Q, Qt.Key_W, Qt.Key_E, Qt.Key_Space
+        ])
+        interval = self.params.get('interval', 0.8)
+
+        self.status_update.emit("⚔️ AUTO-LUTA ATIVA - Pressione F4 para Parar")
+
+        idx = 0
+        while self.is_running:
+            key_code = skills[idx % len(skills)]
+            self.send_key(key_code)
+            idx += 1
+
+            steps = max(1, int(interval * 10))
+            for _ in range(steps):
+                if not self.is_running:
+                    break
+                time.sleep(0.1)
+
+        self.finished.emit()
+
+    def send_key(self, key_code: int) -> None:
+        """Posta evento de pressionar e soltar uma tecla diretamente no widget Chromium."""
+        event_press = QKeyEvent(QEvent.KeyPress, key_code, Qt.NoModifier)
+        QCoreApplication.postEvent(self.target_widget, event_press)
+        time.sleep(0.03)
+        event_release = QKeyEvent(QEvent.KeyRelease, key_code, Qt.NoModifier)
+        QCoreApplication.postEvent(self.target_widget, event_release)
             
     def run_autoclicker(self):
         pos = self.params.get('pos')

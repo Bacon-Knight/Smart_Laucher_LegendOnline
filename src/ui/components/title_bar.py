@@ -36,6 +36,10 @@ class CustomTitleBar(QWidget):
             action_autoclick = QAction("Iniciar AutoClicker (F4)", self)
             action_autoclick.triggered.connect(self.parent.start_autoclicker)
             self.tool_menu.addAction(action_autoclick)
+
+            action_autoluta = QAction("⚔️ Auto-Luta Automática (F5)", self)
+            action_autoluta.triggered.connect(self.parent.start_autoluta)
+            self.tool_menu.addAction(action_autoluta)
             
             action_formacao = QAction("Formação Mágica (Macro 5x5)", self)
             action_formacao.triggered.connect(self.parent.start_formacao_magica)
