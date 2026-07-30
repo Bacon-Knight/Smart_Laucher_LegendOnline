@@ -281,13 +281,16 @@ class GameView(QMainWindow, FramelessWindowMixin):
         viewer.exec_()
 
     def inject_login(self, ok):
-        if ok and self.email and self.password:
-            js = LOGIN_JS_SCRIPT.format(email_json=json.dumps(self.email), password_json=json.dumps(self.password))
-            self.page.runJavaScript(js)
-            
-            proxy = self.browser.focusProxy()
-            if proxy:
-                proxy.installEventFilter(self)
+        if ok:
+            # Ajusta automaticamente a qualidade gráfica do Flash para 'low' para otimizar CPU/RAM
+            QTimer.singleShot(1500, lambda: self.controller.set_flash_quality("low"))
+            if self.email and self.password:
+                js = LOGIN_JS_SCRIPT.format(email_json=json.dumps(self.email), password_json=json.dumps(self.password))
+                self.page.runJavaScript(js)
+                
+                proxy = self.browser.focusProxy()
+                if proxy:
+                    proxy.installEventFilter(self)
 
     def nativeEvent(self, eventType, message):
         handled, result = self.frameless_native_event(eventType, message)

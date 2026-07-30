@@ -27,8 +27,8 @@ class GameController(QObject):
     - Controla a execução de macros (AutoClick, Formação, Custom).
     """
 
-    # Limite padrão de RAM por janela (700 MB é o ponto ideal para rodar 4 contas no mesmo PC)
-    RAM_LIMIT_MB = 700
+    # Limite padrão de RAM por janela (550 MB é o ponto ideal para rodar 4 contas no mesmo PC com 8GB)
+    RAM_LIMIT_MB = 550
 
     def __init__(self, session: GameSession, view, stagger_index: int = 0):
         super().__init__()
