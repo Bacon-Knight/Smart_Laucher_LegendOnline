@@ -1,0 +1,3 @@
+[submodule "tools/inspector"]
+	path = tools/inspector
+	url = https://github.com/Bacon-Knight/LegendInspector.git
