@@ -19,7 +19,7 @@ from src.ui.components.title_bar import CustomTitleBar
 
 logger = get_logger("HubView")
 
-CURRENT_APP_VERSION = "2.3"
+CURRENT_APP_VERSION = "2.4"
 
 class UpdateCheckerThread(QThread):
     """

@@ -4,8 +4,8 @@
 # http://msdn.microsoft.com/en-us/library/ms646997.aspx
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(3, 4, 0, 0),
-    prodvers=(3, 4, 0, 0),
+    filevers=(2, 4, 0, 0),
+    prodvers=(2, 4, 0, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -21,12 +21,12 @@ VSVersionInfo(
           [
             StringStruct(u'CompanyName', u'Bacon Knight Studio'),
             StringStruct(u'FileDescription', u'Legend Online Smart Launcher'),
-            StringStruct(u'FileVersion', u'3.4.0.0'),
+            StringStruct(u'FileVersion', u'2.4.0.0'),
             StringStruct(u'InternalName', u'LegendOnlineLauncher'),
             StringStruct(u'LegalCopyright', u'Copyright (c) 2026 Bacon Knight Studio'),
-            StringStruct(u'OriginalFilename', u'LegendOnlineLauncher_v3.4.exe'),
+            StringStruct(u'OriginalFilename', u'LegendOnlineLauncher_v2.4.exe'),
             StringStruct(u'ProductName', u'Legend Online Launcher'),
-            StringStruct(u'ProductVersion', u'3.4.0.0')
+            StringStruct(u'ProductVersion', u'2.4.0.0')
           ]
         )
       ]
