@@ -31,6 +31,10 @@ __Old/
 *.rar
 *.zip
 
+# Binários de plugin (não devem estar no repositório — use Git LFS se necessário)
+*.dll
+dumped_assets/
+
 # Documentação Interna / Planejamento / Contextos de IA
 docs/AI_CONTEXT.md
 docs/ANALISE_DO_PROJETO.md

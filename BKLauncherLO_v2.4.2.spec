@@ -1,6 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-
 a = Analysis(
     ['src\\main.py'],
     pathex=['.'],
@@ -11,10 +10,14 @@ a = Analysis(
         'src.core.config',
         'src.core.webengine',
         'src.core.macros',
+        'src.core.flash_permissions',
+        'src.core.cache_proxy',
         'src.models.account',
         'src.models.game_session',
         'src.models.relog_schedule',
         'src.services.account_service',
+        'src.services.feedback_service',
+        'src.services.oas_api_service',
         'src.controllers.hub_controller',
         'src.controllers.game_controller',
         'src.ui.views.hub_view',
@@ -22,6 +25,8 @@ a = Analysis(
         'src.ui.components.title_bar',
         'src.ui.components.dialogs',
         'src.ui.components.floating_macro',
+        'src.ui.components.patch_notes_dialog',
+        'src.ui.components.feedback_dialog',
         'src.ui.components.frameless'
     ],
     hookspath=[],
@@ -38,7 +43,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='LegendOnlineLauncher_v2.4',
+    name='BKLauncherLO_v2.4.2',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -60,5 +65,5 @@ coll = COLLECT(
     strip=False,
     upx=False,
     upx_exclude=[],
-    name='LegendOnlineLauncher_v2.4',
+    name='BKLauncherLO_v2.4.2',
 )

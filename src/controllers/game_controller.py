@@ -103,8 +103,9 @@ class GameController(QObject):
 
     def check_ram_usage(self):
         """
-        Monitora o consumo de RAM da instância a cada 5 minutos.
-        Se ultrapassar 700 MB (ideal para multi-boxing de 4 contas), sugere relog ao usuário.
+        Monitora o consumo de RAM do processo inteiro a cada 5 minutos.
+        O limite é escalado pelo número de janelas de jogo ativas para evitar
+        falsos-positivos em sessões de multi-boxing (ex: 4 janelas × 550 MB = 2200 MB).
         """
         if getattr(self.view, "_is_closing", False) or not hasattr(self.view, 'isVisible') or not self.view.isVisible():
             return
@@ -116,15 +117,25 @@ class GameController(QObject):
                 mem = proc.memory_info()
                 ram_mb = int(mem.rss / (1024 * 1024))
 
-            if ram_mb > self.RAM_LIMIT_MB:
-                logger.warning(f"[{mask_email(self.session.email)}] Alerta de RAM: Janela consumindo {ram_mb} MB (Limite: {self.RAM_LIMIT_MB} MB).")
-                dialog = RAMLimitDialog(ram_mb=ram_mb, limit_mb=self.RAM_LIMIT_MB, parent=self.view)
+            # Ajusta o limite pelo número de janelas ativas registradas no hub
+            active_windows = 1
+            if hasattr(self.view, 'hub_controller') and self.view.hub_controller:
+                active_windows = max(1, len(self.view.hub_controller.game_windows))
+            effective_limit = self.RAM_LIMIT_MB * active_windows
+
+            if ram_mb > effective_limit:
+                logger.warning(
+                    f"[{mask_email(self.session.email)}] Alerta de RAM: Processo usando {ram_mb} MB "
+                    f"(Limite ajustado: {effective_limit} MB para {active_windows} janela(s))."
+                )
+                dialog = RAMLimitDialog(ram_mb=ram_mb, limit_mb=effective_limit, parent=self.view)
                 dialog.exec_()
                 if dialog.result_action == "relog":
                     logger.info(f"[{mask_email(self.session.email)}] Relog acionado via Alerta de RAM ({ram_mb} MB).")
                     self.fast_relog()
         except Exception as e:
             logger.debug(f"Erro ao verificar consumo de RAM: {e}")
+
 
     def set_flash_quality(self, quality: str = "low"):
         """

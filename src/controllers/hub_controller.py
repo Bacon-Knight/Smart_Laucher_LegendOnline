@@ -1,14 +1,15 @@
 import sys
+import json
 import ctypes
 import datetime
-from typing import List, Dict, Any
+from typing import Dict, Any
 from PyQt5.QtCore import QObject, QTimer, QSettings
 from PyQt5.QtWidgets import QApplication
 
 from src.core.logger import get_logger
-from src.core.config import GAME_URL_TEMPLATE, COLOR_ORDER, COLOR_MAP
-from src.services.account_service import AccountService
-from src.models.account import Account
+from src.core.config import GAME_URL_TEMPLATE, COLOR_ORDER, COLOR_MAP, encrypt_password, decrypt_password
+# AccountService usa namespace legado ("CustomLauncher"). Toda a persistência
+# de contas é gerenciada diretamente neste controller via QSettings("BaconKnightStudio", ...).
 from src.models.game_session import GameSession
 
 logger = get_logger("HubController")
@@ -64,59 +65,79 @@ class AFKManager(QObject):
 
 class HubController(QObject):
     """
-    Controlador MVC responsável pelo Launcher Hub:
-    - Gerencia carregamento, adição e exclusão de contas via AccountService.
+    Controlador MVC responsável pelo BK Launcher LO Hub:
+    - Gerencia carregamento, adição e exclusão de contas com criptografia DPAPI no QSettings.
     - Controla a execução do AFKManager e Modo Oculto.
-    - Lança novas janelas de jogo (instanciando GameSession, GameView e GameController).
+    - Lança novas janelas de jogo.
     """
 
     def __init__(self, view=None):
         super().__init__()
         self.view = view
-        self.settings = QSettings("CustomLauncher", "LegendOnline")
-        self.account_service = AccountService()
+        self.settings = QSettings("BaconKnightStudio", "BKLauncherLO")
+        # Migração transparente de QSettings legados ("CustomLauncher")
+        legacy_settings = QSettings("CustomLauncher", "LegendOnline")
+        if not self.settings.contains("saved_accounts") and legacy_settings.contains("saved_accounts"):
+            self.settings.setValue("saved_accounts", legacy_settings.value("saved_accounts"))
+            self.settings.setValue("last_email", legacy_settings.value("last_email", ""))
+            self.settings.setValue("server", legacy_settings.value("server", "1252"))
+
         self.game_windows = []
         self.boss_hidden = False
-
         self.afk_manager = AFKManager(self, timeout_mins=2)
 
     def get_saved_accounts(self) -> Dict[str, Any]:
-        """Retorna o dicionário de contas salvas."""
+        """Retorna o dicionário de contas salvas com senhas descriptografadas."""
         try:
             accs_json = self.settings.value("saved_accounts", "{}")
-            import json
             raw_dict = json.loads(accs_json)
+            result = {}
             for k, v in raw_dict.items():
                 if isinstance(v, str):
-                    raw_dict[k] = {"password": v, "server": "1252", "nick": ""}
-            return raw_dict
+                    result[k] = {"password": decrypt_password(v), "server": "1252", "nick": ""}
+                elif isinstance(v, dict):
+                    v_copy = dict(v)
+                    v_copy["password"] = decrypt_password(v_copy.get("password", ""))
+                    result[k] = v_copy
+            return result
         except Exception as e:
-            logger.error(f"Erro ao carregar contas: {e}")
+            logger.error(f"Erro ao carregar contas salvas: {e}")
             return {}
 
     def save_account(self, email: str, password: str, server_num: str, nick: str):
-        """Salva ou atualiza os dados de uma conta no QSettings."""
-        import json
-        saved = self.get_saved_accounts()
-        saved[email] = {
+        """Salva ou atualiza os dados de uma conta com senha criptografada via DPAPI no QSettings."""
+        saved_plain = self.get_saved_accounts()
+        saved_plain[email] = {
             "password": password,
             "server": server_num,
             "nick": nick,
             "last_login": datetime.datetime.now().strftime("%d/%m %H:%M"),
         }
-        self.settings.setValue("saved_accounts", json.dumps(saved))
+        
+        # Prepara a estrutura criptografada para gravação em disco
+        to_save = {}
+        for em, acc_data in saved_plain.items():
+            acc_copy = dict(acc_data)
+            acc_copy["password"] = encrypt_password(acc_copy.get("password", ""))
+            to_save[em] = acc_copy
+
+        self.settings.setValue("saved_accounts", json.dumps(to_save))
         self.settings.setValue("last_email", email)
         self.settings.setValue("server", server_num)
-        return saved
+        return saved_plain
 
     def delete_account(self, email: str):
         """Remove uma conta salva pelo e-mail."""
-        import json
-        saved = self.get_saved_accounts()
-        if email in saved:
-            del saved[email]
-            self.settings.setValue("saved_accounts", json.dumps(saved))
-        return saved
+        saved_plain = self.get_saved_accounts()
+        if email in saved_plain:
+            del saved_plain[email]
+            to_save = {}
+            for em, acc_data in saved_plain.items():
+                acc_copy = dict(acc_data)
+                acc_copy["password"] = encrypt_password(acc_copy.get("password", ""))
+                to_save[em] = acc_copy
+            self.settings.setValue("saved_accounts", json.dumps(to_save))
+        return saved_plain
 
     def unregister_game_window(self, gw):
         """Remove uma janela de jogo da lista de janelas ativas."""

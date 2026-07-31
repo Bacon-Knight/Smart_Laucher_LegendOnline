@@ -21,6 +21,15 @@ def get_chromium_flags() -> List[str]:
     flags = [
         f"--ppapi-flash-path={plugin_path}",
         "--ppapi-flash-version=32.0.0.371",
+        # --- OTIMIZAÇÃO DE CACHE E PERMISSÕES DO FLASH (ESTILO PETA) ---
+        "--disk-cache-size=1073741824",         # 1 GB de Cache de Disco para SWFs
+        "--media-cache-size=268435456",          # 256 MB de Cache de Mídia
+        "--disable-gpu-shader-disk-cache=0",    # Ativar Cache de Shaders GPU
+        "--plugin-policy=allow",                # Permitir plugins automaticamente
+        "--allow-outdated-plugins=1",           # Nunca bloquear Flash desatualizado
+        "--always-authorize-plugins=1",         # Autorizar plugins sem prompt
+        "--run-all-flash-in-allow-mode=1",      # Modo seguro de execução do Flash
+        # --- PERFORMANCE GPU ---
         "--ignore-gpu-blocklist",
         "--enable-gpu-rasterization",
         "--enable-zero-copy",

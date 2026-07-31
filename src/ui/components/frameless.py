@@ -16,7 +16,8 @@ class FramelessWindowMixin:
             style |= 0x00040000 | 0x00020000 | 0x00010000 | 0x00C00000
             user32.SetWindowLongW(HWND, -16, style)
         except Exception as e:
-            pass
+            import logging
+            logging.getLogger("FramelessWindowMixin").debug(f"enable_windows_snap falhou: {e}")
 
     def setup_linux_frameless(self):
         if sys.platform != 'win32':

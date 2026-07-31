@@ -1,25 +1,29 @@
 import json
 import os
-import sys
 import urllib.request
 import urllib.error
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QComboBox, QLineEdit, QSystemTrayIcon, QMenu, QAction, QMessageBox,
-    QGraphicsDropShadowEffect, QStyle, QApplication, QShortcut, QCheckBox,
+    QGraphicsDropShadowEffect, QStyle, QShortcut, QCheckBox,
     QScrollArea, QFrame
 )
-from PyQt5.QtCore import Qt, QTimer, QUrl, QPoint, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QTimer, QUrl, QSize, QThread, pyqtSignal
 from PyQt5.QtGui import QColor, QKeySequence, QDesktopServices
 
 from src.core.logger import get_logger
-from src.core.config import resource_path
+from src.core.config import resource_path, APP_NAME
 from src.controllers.hub_controller import HubController
+from src.core.cache_proxy import clear_proxy_cache
 from src.ui.components.title_bar import CustomTitleBar
 
 logger = get_logger("HubView")
 
-CURRENT_APP_VERSION = "2.4"
+CURRENT_APP_VERSION = "2.4.2"
+
+def parse_version_tuple(v_str: str):
+    import re
+    return tuple(int(x) for x in re.findall(r'\d+', v_str))
 
 class UpdateCheckerThread(QThread):
     """
@@ -37,9 +41,12 @@ class UpdateCheckerThread(QThread):
                     latest_tag = data.get("tag_name", "").strip().lstrip("v")
                     html_url = data.get("html_url", "https://github.com/Bacon-Knight/Smart_Laucher_LegendOnline/releases")
                     
-                    if latest_tag and latest_tag != CURRENT_APP_VERSION:
-                        self.update_signal.emit(True, latest_tag, html_url)
-                        return
+                    if latest_tag:
+                        latest_tuple = parse_version_tuple(latest_tag)
+                        current_tuple = parse_version_tuple(CURRENT_APP_VERSION)
+                        if latest_tuple > current_tuple:
+                            self.update_signal.emit(True, latest_tag, html_url)
+                            return
             self.update_signal.emit(False, CURRENT_APP_VERSION, "")
         except Exception as e:
             logger.debug(f"Verificação de atualização indisponível ou offline: {e}")
@@ -222,12 +229,12 @@ class HubView(QMainWindow):
         self.input_server.setFixedWidth(100)
         
         self.input_nick = QLineEdit()
-        self.input_nick.setPlaceholderText("Nick")
+        self.input_nick.setPlaceholderText("Nick (Opcional)")
         self.input_nick.setText(current_acc.get("nick", ""))
-        self.input_nick.setFixedWidth(120)
+        self.input_nick.setFixedWidth(135)
         
-        self.chk_afk = QCheckBox("Modo Oculto")
-        self.chk_afk.setToolTip("Oculta o jogo após 2 min de inatividade (Modo Chefe)")
+        self.chk_afk = QCheckBox("Modo Trabalho")
+        self.chk_afk.setToolTip("Oculta a janela do jogo (Atalhos: Ctrl+Shift+A para ocultar/restaurar)")
         self.chk_afk.setStyleSheet("color: white;")
         self.chk_afk.setChecked(self.controller.settings.value("afk_enabled", True, type=bool))
         self.chk_afk.stateChanged.connect(self.on_afk_changed)
@@ -249,6 +256,29 @@ class HubView(QMainWindow):
         content_layout.addWidget(self.input_server)
         content_layout.addWidget(self.input_nick)
         content_layout.addStretch()
+        
+        # Indicador de status do Proxy Cache & Botão Limpar Cache
+        try:
+            from src.core.cache_proxy import CacheProxyServer
+            proxy_active = CacheProxyServer.get_instance().is_running
+            proxy_port = CacheProxyServer.get_instance().port
+            self.lbl_proxy_status = QLabel(f"⚡ Proxy: {proxy_port}" if proxy_active else "⚡ Cache: OK")
+            self.lbl_proxy_status.setStyleSheet("color: #4dff88; font-size: 10px; font-weight: bold; background: #16291a; padding: 2px 6px; border-radius: 3px; border: 1px solid #235e31;" if proxy_active else "color: #a893c4; font-size: 10px; padding: 2px 6px;")
+            self.lbl_proxy_status.setToolTip(f"⚡ Proxy Cache de Assets Acelerado na Porta {proxy_port}" if proxy_active else "Cache Compartilhado de Assets Ativo")
+            content_layout.addWidget(self.lbl_proxy_status)
+
+            self.btn_clear_assets = QPushButton("🧹 Limpar Assets")
+            self.btn_clear_assets.setFixedHeight(24)
+            self.btn_clear_assets.setStyleSheet("""
+                QPushButton { background: #1f142b; border: 1px solid #482963; border-radius: 4px; color: #a893c4; font-size: 10px; padding: 2px 6px; }
+                QPushButton:hover { background: #351554; color: #d9b855; border-color: #c9a444; }
+            """)
+            self.btn_clear_assets.setToolTip("Esvazia o cache compartilhado de arquivos estáticos (.swf/imagens) do disco.")
+            self.btn_clear_assets.clicked.connect(self._on_clear_assets_clicked)
+            content_layout.addWidget(self.btn_clear_assets)
+        except Exception:
+            pass
+
         content_layout.addWidget(self.btn_ok)
         content_layout.addWidget(self.btn_cancel)
         content_layout.addWidget(self.chk_afk)
@@ -292,16 +322,26 @@ class HubView(QMainWindow):
         card_layout.addWidget(self.accounts_grid_container)
         self._refresh_accounts_grid()
 
+    def _on_clear_assets_clicked(self):
+        if clear_proxy_cache():
+            QMessageBox.information(self, "Cache Limpo", "O cache compartilhado de assets foi limpo com sucesso!")
+        else:
+            QMessageBox.warning(self, "Aviso", "Não foi possível limpar o cache ou nenhum arquivo estava presente.")
+
     def toggle_accounts_grid(self):
-        """Expande ou recolhe o painel de cartões de contas."""
+        """Expande ou recolhe o painel de cartões de contas com transição suave."""
         self._grid_visible = not self._grid_visible
         self.accounts_grid_container.setVisible(self._grid_visible)
+        
+        target_height = 260 if self._grid_visible else 80
+        from PyQt5.QtCore import QPropertyAnimation
+        self.anim = QPropertyAnimation(self, b"size")
+        self.anim.setDuration(180)
+        self.anim.setEndValue(QSize(self.width(), target_height))
+        self.anim.start()
+        self.setFixedHeight(target_height)
         if self._grid_visible:
-            self.setFixedHeight(260)
             self._refresh_accounts_grid()
-        else:
-            self.setFixedHeight(80)
-        self.adjustSize()
 
     def _refresh_accounts_grid(self):
         """Reconstrói todos os cartões de conta no scroll horizontal."""
@@ -317,23 +357,32 @@ class HubView(QMainWindow):
             self.scroll_layout.insertWidget(0, lbl)
             return
 
+        current_email = self.input_email.currentText().strip()
         for email, data in self.saved_accounts.items():
-            card = self._make_account_card(email, data)
+            is_selected = (email.lower() == current_email.lower())
+            card = self._make_account_card(email, data, is_selected=is_selected)
             self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, card)
 
-    def _make_account_card(self, email, data):
-        """Cria um cartão visual para uma conta."""
+    def _make_account_card(self, email, data, is_selected=False):
+        """Cria um cartão visual para uma conta com destaque de seleção e botão de lixeira."""
         nick   = data.get("nick", "") or email.split("@")[0]
         server = data.get("server", "?")
         last   = data.get("last_login", "Nunca")
 
         card = QWidget()
         card.setFixedWidth(160)
-        card.setStyleSheet(
-            "QWidget { background-color: #1a1028; border: 1px solid #351554;"
-            " border-radius: 8px; }"
-            "QWidget:hover { border-color: #c9a444; }"
-        )
+        
+        if is_selected:
+            card.setStyleSheet(
+                "QWidget { background-color: #26163b; border: 2px solid #c9a444;"
+                " border-radius: 8px; }"
+            )
+        else:
+            card.setStyleSheet(
+                "QWidget { background-color: #1a1028; border: 1px solid #351554;"
+                " border-radius: 8px; }"
+                "QWidget:hover { border-color: #c9a444; }"
+            )
 
         layout = QVBoxLayout(card)
         layout.setContentsMargins(8, 8, 8, 8)
@@ -366,11 +415,12 @@ class HubView(QMainWindow):
         )
         btn_enter.clicked.connect(lambda _, e=email, d=data: self._launch_from_card(e, d))
 
-        btn_del = QPushButton("✕")
-        btn_del.setFixedSize(20, 20)
+        btn_del = QPushButton("🗑")
+        btn_del.setFixedSize(22, 22)
+        btn_del.setToolTip("Excluir esta conta salva")
         btn_del.setStyleSheet(
-            "QPushButton { background: transparent; border: none; color: #482963; font-size: 10px; }"
-            "QPushButton:hover { color: #ff4d4d; }"
+            "QPushButton { background: transparent; border: none; color: #6a498a; font-size: 12px; }"
+            "QPushButton:hover { color: #ff4d4d; background: #2b0e1a; border-radius: 4px; }"
         )
         btn_del.clicked.connect(lambda _, e=email: self._delete_from_card(e))
 
@@ -392,6 +442,7 @@ class HubView(QMainWindow):
         self.input_password.setText(data.get("password", ""))
         self.input_server.setText(data.get("server", "1252"))
         self.input_nick.setText(data.get("nick", ""))
+        self._refresh_accounts_grid()
         self.launch_game()
 
     def _delete_from_card(self, email):
@@ -407,6 +458,7 @@ class HubView(QMainWindow):
             self.input_password.setText(acc.get("password", ""))
             self.input_server.setText(acc.get("server", ""))
             self.input_nick.setText(acc.get("nick", ""))
+        self._refresh_accounts_grid()
 
     def on_afk_changed(self, state):
         self.controller.settings.setValue("afk_enabled", state == Qt.Checked)
@@ -420,9 +472,11 @@ class HubView(QMainWindow):
             self.btn_toggle_pass.setText("👁")
 
     def launch_game(self):
+        import re
         email = self.input_email.currentText().strip()
         password = self.input_password.text()
-        server_num = self.input_server.text().strip()
+        raw_server = self.input_server.text().strip()
+        server_num = re.sub(r'\D', '', raw_server)
         nick = self.input_nick.text().strip()
         
         if not email:
@@ -430,7 +484,7 @@ class HubView(QMainWindow):
             return
             
         if not server_num:
-            QMessageBox.warning(self, "Aviso de Servidor", "O número do servidor não pode ficar vazio.")
+            QMessageBox.warning(self, "Aviso de Servidor", "Por favor, insira um número de servidor válido (ex: 1252).")
             return
         
         self.controller.launch_game(email, password, server_num, nick)
@@ -438,6 +492,11 @@ class HubView(QMainWindow):
 
     def show_donation_popup(self):
         try:
+            seen_version = self.controller.settings.value("seen_patch_notes_version", "")
+            if seen_version == CURRENT_APP_VERSION:
+                logger.info(f"Notas de atualização da v{CURRENT_APP_VERSION} já exibidas anteriormente. Ignorando popup.")
+                return
+
             msg = QMessageBox(self)
             msg.setWindowTitle("Apoie o Projeto 🥓")
             msg.setTextFormat(Qt.RichText)
@@ -452,6 +511,15 @@ class HubView(QMainWindow):
             msg.addButton("Entendido!", QMessageBox.AcceptRole)
             msg.setStyleSheet("QMessageBox { background-color: #120c18; color: white; } QLabel { color: white; } QPushButton { background-color: #2b1b3d; color: white; padding: 5px 15px; border: 1px solid #c9a444; border-radius: 4px; }")
             msg.exec_()
+
+            # Exibe as Notas de Atualização (Patch Notes) intuitivamente após a doação
+            try:
+                from src.ui.components.patch_notes_dialog import PatchNotesDialog
+                patch_dlg = PatchNotesDialog(version=CURRENT_APP_VERSION, parent=self)
+                patch_dlg.exec_()
+                self.controller.settings.setValue("seen_patch_notes_version", CURRENT_APP_VERSION)
+            except Exception as patch_err:
+                logger.debug(f"Não foi possível abrir as notas de atualização: {patch_err}")
         except Exception as e:
             logger.error(f"Erro no popup de doacao: {e}")
 

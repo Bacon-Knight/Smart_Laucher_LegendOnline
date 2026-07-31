@@ -2,12 +2,16 @@ import os
 import time
 import json
 from PyQt5.QtCore import Qt, QUrl, QTimer, QPoint, QEvent
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QShortcut, QSystemTrayIcon, QMenu, QAction
+from PyQt5.QtWidgets import (
+    QMainWindow, QWidget, QVBoxLayout, QShortcut, QSystemTrayIcon, QMenu, QAction,
+    QFrame, QLabel
+)
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings, QWebEngineProfile, QWebEnginePage
 from PyQt5.QtGui import QIcon, QKeySequence
 
 from src.core.logger import get_logger, mask_email
-from src.core.config import get_cache_dir, LOGIN_JS_SCRIPT, resource_path
+from src.core.config import get_cache_dir, get_shared_cache_dir, LOGIN_JS_SCRIPT, resource_path
+from src.core.cache_proxy import CacheProxyServer
 from src.models.game_session import GameSession
 from src.controllers.game_controller import GameController
 from src.ui.components.frameless import FramelessWindowMixin
@@ -116,13 +120,18 @@ class GameView(QMainWindow, FramelessWindowMixin):
         
         if self.session.enable_cache:
             cache_dir = get_cache_dir(safe_email)
-            account_cache_dir = os.path.join(cache_dir, "cache")
-            self.profile.setCachePath(account_cache_dir)
+            shared_cache_dir = get_shared_cache_dir()
+            # Compartilha o cache de disco de recursos (.swf, imagens) entre todas as contas
+            self.profile.setCachePath(shared_cache_dir)
+            # Mantém cookies e dados de sessão/login isolados por conta
             self.profile.setPersistentStoragePath(cache_dir)
             self.profile.setPersistentCookiesPolicy(QWebEngineProfile.ForcePersistentCookies)
             self.profile.setHttpCacheType(QWebEngineProfile.DiskHttpCache)
             self.profile.setHttpCacheMaximumSize(1024 * 1024 * 1024)
-            logger.info(f"[{mask_email(self.email)}] Cache e storage isolados em: {cache_dir}")
+            
+            proxy_active = CacheProxyServer.get_instance().is_running
+            proxy_msg = f"⚡ Proxy Cache Ativo (Porta {CacheProxyServer.get_instance().port})" if proxy_active else "⚡ Cache Direto Ativo"
+            logger.info(f"[{mask_email(self.email)}] Assets compartilhados em '{shared_cache_dir}'. Sessão isolada em '{cache_dir}'. Status: {proxy_msg}")
         else:
             self.profile.setHttpCacheType(QWebEngineProfile.NoCache)
             
@@ -134,6 +143,40 @@ class GameView(QMainWindow, FramelessWindowMixin):
         
         self.enable_windows_snap()
         self.setup_linux_frameless()
+        
+        # Overlay de Carregamento para ocultar a página de login branca
+        self.loading_overlay = QFrame(self.main_card)
+        self.loading_overlay.setObjectName("LoadingOverlay")
+        self.loading_overlay.setStyleSheet("""
+            #LoadingOverlay {
+                background-color: #0d0d13;
+                border-bottom-left-radius: 10px;
+                border-bottom-right-radius: 10px;
+            }
+        """)
+        overlay_layout = QVBoxLayout(self.loading_overlay)
+        overlay_layout.setAlignment(Qt.AlignCenter)
+        
+        lbl_icon = QLabel("🥓")
+        lbl_icon.setStyleSheet("font-size: 48px; background: transparent;")
+        lbl_icon.setAlignment(Qt.AlignCenter)
+        
+        lbl_status = QLabel("Iniciando Sessão no Legend Online...")
+        lbl_status.setStyleSheet("color: #d9b855; font-size: 16px; font-weight: bold; background: transparent;")
+        lbl_status.setAlignment(Qt.AlignCenter)
+        
+        lbl_sub = QLabel("Autenticando credenciais e preparando o jogo...")
+        lbl_sub.setStyleSheet("color: #8a7a9e; font-size: 12px; background: transparent;")
+        lbl_sub.setAlignment(Qt.AlignCenter)
+        
+        overlay_layout.addWidget(lbl_icon)
+        overlay_layout.addWidget(lbl_status)
+        overlay_layout.addWidget(lbl_sub)
+        
+        self.loading_overlay.show()
+        self.loading_overlay.raise_()
+        QTimer.singleShot(4500, self.hide_loading_overlay)
+
         self.browser.loadFinished.connect(self.inject_login)
         
         logger.info(f"[{mask_email(self.email)}] Conectando no servidor: {self.server_url}")
@@ -280,10 +323,27 @@ class GameView(QMainWindow, FramelessWindowMixin):
         viewer = ImageViewerDialog(abs_path, self)
         viewer.exec_()
 
+    def hide_loading_overlay(self):
+        if hasattr(self, 'loading_overlay') and self.loading_overlay and self.loading_overlay.isVisible():
+            self.loading_overlay.hide()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, 'loading_overlay') and self.loading_overlay and self.loading_overlay.isVisible():
+            tb_h = self.title_bar.height() if hasattr(self, 'title_bar') and self.title_bar else 32
+            self.loading_overlay.setGeometry(0, tb_h, self.width(), self.height() - tb_h)
+            
+        if not getattr(self, '_is_closing', False) and hasattr(self, 'page') and self.page is not None:
+            if not hasattr(self, '_zoom_timer'):
+                self._zoom_timer = QTimer(self)
+                self._zoom_timer.setSingleShot(True)
+                self._zoom_timer.timeout.connect(self.controller.apply_zoom_debounced)
+            self._zoom_timer.start(150)
+
     def inject_login(self, ok):
         if ok:
-            # Ajusta automaticamente a qualidade gráfica do Flash para 'low' para otimizar CPU/RAM
             QTimer.singleShot(1500, lambda: self.controller.set_flash_quality("low"))
+            QTimer.singleShot(2200, self.hide_loading_overlay)
             if self.email and self.password:
                 js = LOGIN_JS_SCRIPT.format(email_json=json.dumps(self.email), password_json=json.dumps(self.password))
                 self.page.runJavaScript(js)
@@ -387,14 +447,7 @@ class GameView(QMainWindow, FramelessWindowMixin):
         self.macro_worker.finished.connect(self.controller.stop_macros)
         self.macro_worker.start()
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        if not getattr(self, '_is_closing', False) and hasattr(self, 'page') and self.page is not None:
-            if not hasattr(self, '_zoom_timer'):
-                self._zoom_timer = QTimer(self)
-                self._zoom_timer.setSingleShot(True)
-                self._zoom_timer.timeout.connect(self.controller.apply_zoom_debounced)
-            self._zoom_timer.start(150)
+
 
     def _cleanup_resources(self):
         """Interrompe timers, oculta a bandeja do Windows e limpa componentes Qt/WebEngine."""

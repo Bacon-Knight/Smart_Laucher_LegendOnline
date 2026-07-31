@@ -20,7 +20,8 @@ class CustomTitleBar(QWidget):
             self.icon_label.setPixmap(QIcon(icon_path).pixmap(18, 18))
             self.layout.addWidget(self.icon_label)
 
-        self.title = QLabel("Launcher By Bacon Knight")
+        from src.core.config import APP_NAME
+        self.title = QLabel(APP_NAME)
         self.title.setObjectName("TitleLabel")
         self.layout.addWidget(self.title)
         self.layout.addStretch()
@@ -124,7 +125,7 @@ class CustomTitleBar(QWidget):
         self.btn_minimize = QPushButton("—")
         self.btn_minimize.setFixedSize(22, 22)
         self.btn_minimize.setObjectName("TitleBtn")
-        self.btn_minimize.clicked.connect(self.parent.showMinimized)
+        self.btn_minimize.clicked.connect(self._on_minimize)
         
         self.btn_maximize = QPushButton("🗖")
         self.btn_maximize.setFixedSize(22, 22)
@@ -134,15 +135,42 @@ class CustomTitleBar(QWidget):
         self.btn_close = QPushButton("✕")
         self.btn_close.setFixedSize(22, 22)
         self.btn_close.setObjectName("TitleBtnClose")
-        self.btn_close.clicked.connect(self.parent.close)
+        self.btn_close.clicked.connect(self._on_close)
         
+        # Botão de Feedback 💬
+        self.btn_feedback = QPushButton("💬")
+        self.btn_feedback.setFixedSize(22, 22)
+        self.btn_feedback.setObjectName("TitleBtn")
+        self.btn_feedback.setToolTip("Enviar Feedback / Relatar Bug para a Comunidade")
+        self.btn_feedback.clicked.connect(self.open_feedback_dialog)
+
+        self.layout.addWidget(self.btn_feedback)
         self.layout.addWidget(self.btn_minimize)
         self.layout.addWidget(self.btn_maximize)
         self.layout.addWidget(self.btn_close)
-        
+
         self.drag_offset = None
 
+    def _on_minimize(self):
+        if self.parent:
+            self.parent.showMinimized()
+
+    def _on_close(self):
+        if self.parent:
+            self.parent.close()
+
+    def open_feedback_dialog(self):
+        try:
+            from src.ui.components.feedback_dialog import FeedbackDialog
+            dlg = FeedbackDialog(parent=self.parent)
+            dlg.exec_()
+        except Exception as e:
+            import logging
+            logging.getLogger("CustomTitleBar").debug(f"Não foi possível abrir FeedbackDialog: {e}")
+
     def toggle_maximize(self):
+        if not self.parent:
+            return
         if self.parent.isMaximized():
             self.parent.showNormal()
             self.btn_maximize.setText("🗖")

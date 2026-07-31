@@ -1,5 +1,61 @@
 import os
 import sys
+import base64
+
+APP_NAME = "BK Launcher LO"
+APP_VERSION = "2.4.2"
+
+def encrypt_password(plain_text: str) -> str:
+    """Criptografa a senha usando Windows DPAPI nativa com fallback seguro em base64."""
+    if not plain_text:
+        return ""
+    if sys.platform == 'win32':
+        try:
+            import ctypes
+            import ctypes.wintypes
+            class DATA_BLOB(ctypes.Structure):
+                _fields_ = [("cbData", ctypes.wintypes.DWORD), ("pbData", ctypes.POINTER(ctypes.c_char))]
+
+            buffer = plain_text.encode('utf-8')
+            blob_in = DATA_BLOB(len(buffer), ctypes.cast(ctypes.create_string_buffer(buffer), ctypes.POINTER(ctypes.c_char)))
+            blob_out = DATA_BLOB()
+
+            if ctypes.windll.crypt32.CryptProtectData(ctypes.byref(blob_in), "BKLauncherDPAPI", None, None, None, 0, ctypes.byref(blob_out)):
+                encrypted_bytes = ctypes.string_at(blob_out.pbData, blob_out.cbData)
+                ctypes.windll.kernel32.LocalFree(blob_out.pbData)
+                return "DPAPI:" + base64.b64encode(encrypted_bytes).decode('utf-8')
+        except Exception:
+            pass
+    return "B64:" + base64.b64encode(plain_text.encode('utf-8')).decode('utf-8')
+
+def decrypt_password(cipher_text: str) -> str:
+    """Descriptografa a senha codificada com DPAPI, Base64 ou fallback legado em texto puro."""
+    if not cipher_text:
+        return ""
+    if cipher_text.startswith("DPAPI:") and sys.platform == 'win32':
+        try:
+            import ctypes
+            import ctypes.wintypes
+            class DATA_BLOB(ctypes.Structure):
+                _fields_ = [("cbData", ctypes.wintypes.DWORD), ("pbData", ctypes.POINTER(ctypes.c_char))]
+
+            raw_bytes = base64.b64decode(cipher_text[6:])
+            blob_in = DATA_BLOB(len(raw_bytes), ctypes.cast(ctypes.create_string_buffer(raw_bytes), ctypes.POINTER(ctypes.c_char)))
+            blob_out = DATA_BLOB()
+
+            if ctypes.windll.crypt32.CryptUnprotectData(ctypes.byref(blob_in), None, None, None, None, 0, ctypes.byref(blob_out)):
+                decrypted_bytes = ctypes.string_at(blob_out.pbData, blob_out.cbData)
+                ctypes.windll.kernel32.LocalFree(blob_out.pbData)
+                return decrypted_bytes.decode('utf-8')
+        except Exception:
+            pass
+        return ""
+    elif cipher_text.startswith("B64:"):
+        try:
+            return base64.b64decode(cipher_text[4:]).decode('utf-8')
+        except Exception:
+            return ""
+    return cipher_text
 
 def resource_path(relative_path: str) -> str:
     """ Pega o caminho absoluto, funcionando tanto em dev quanto num .exe do PyInstaller """
@@ -20,7 +76,9 @@ def get_cache_dir(safe_email: str) -> str:
     return os.path.join(get_app_data_dir(), "cache", safe_email)
 
 def get_shared_cache_dir() -> str:
-    return os.path.join(get_app_data_dir(), "cache", "shared_assets")
+    path = os.path.join(get_app_data_dir(), "cache", "shared_assets")
+    os.makedirs(path, exist_ok=True)
+    return path
 
 def get_login_js_script(email_json: str, password_json: str) -> str:
     """Carrega o script de login a partir do arquivo JS em assets se existir, ou usa a constante fallback."""
@@ -35,39 +93,60 @@ def get_login_js_script(email_json: str, password_json: str) -> str:
     return LOGIN_JS_SCRIPT.format(email_json=email_json, password_json=password_json)
 
 LOGIN_JS_SCRIPT = """
-setTimeout(function() {{
-    var emailInput = document.querySelector('input[type="email"]') || document.querySelector('input[name="email"]') || document.querySelector('input[name="login"]') || document.querySelector('input[name="account"]') || document.querySelector('input[name="username"]') || document.querySelector('input[type="text"]');
-    var passInput = document.querySelector('input[type="password"]') || document.querySelector('input[name="password"]');
-    
-    if(emailInput && passInput) {{
-        emailInput.value = {email_json};
-        passInput.value = {password_json};
-        
-        emailInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
-        passInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
-        emailInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
-        passInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
-        
-        var btn = document.querySelector('button[type="submit"], input[type="submit"], .btn-login, .login-btn, #btnLogin') || document.evaluate("//*[contains(text(), 'Login')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-        if(btn && typeof btn.click === 'function') {{
-            btn.click();
-        }} else if (emailInput.form) {{
-            emailInput.form.submit();
+(function() {{
+    try {{
+        var host = (window.location.hostname || "").toLowerCase();
+        var allowed = ["oasgames.com", "creaction-network.com", "7.wan.com", "espritgames.com", "gamehollywood.com", "brov.site"];
+        if (host && !allowed.some(function(d) {{ return host.indexOf(d) !== -1; }})) {{
+            console.warn("BK Launcher LO: Autologin bloqueado em domínio não autorizado: " + host);
+            return;
         }}
-        console.log("Credenciais injetadas pelo Custom Launcher!");
+    }} catch(e) {{}}
+
+    try {{
+        var style = document.createElement('style');
+        style.type = 'text/css';
+        style.innerHTML = 'body {{ background-color: #0d0d13 !important; }} form, .login-box, .login_box, .login-container, .main-login {{ opacity: 0 !important; visibility: hidden !important; transition: opacity 0.3s ease; }}';
+        (document.head || document.documentElement).appendChild(style);
+    }} catch(e) {{}}
+
+    function attemptLogin() {{
+        var emailInput = document.querySelector('input[type="email"]') || document.querySelector('input[name="email"]') || document.querySelector('input[name="login"]') || document.querySelector('input[name="account"]') || document.querySelector('input[name="username"]') || document.querySelector('input[type="text"]');
+        var passInput = document.querySelector('input[type="password"]') || document.querySelector('input[name="password"]');
+        
+        if (emailInput && passInput) {{
+            emailInput.value = {email_json};
+            passInput.value = {password_json};
+            
+            emailInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+            passInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+            emailInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
+            passInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
+            
+            var btn = document.querySelector('button[type="submit"], input[type="submit"], .btn-login, .login-btn, #btnLogin') || document.evaluate("//*[contains(text(), 'Login')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            if (btn && typeof btn.click === 'function') {{
+                btn.click();
+            }} else if (emailInput.form) {{
+                emailInput.form.submit();
+            }}
+            console.log("Credenciais injetadas automaticamente pelo BK Launcher LO!");
+        }} else {{
+            setTimeout(attemptLogin, 150);
+        }}
     }}
 
-    // Auto-clique em botões de entrada/jogo caso esteja na lista de servidores
+    attemptLogin();
+
     setTimeout(function() {{
         var playBtn = document.querySelector('.btn-play, .play-btn, .btn-enter, #btnPlay, .enter-game, .btn_start') ||
                       document.evaluate("//a[contains(text(), 'Jogar') or contains(text(), 'Entrar') or contains(text(), 'Play')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue ||
                       document.evaluate("//button[contains(text(), 'Jogar') or contains(text(), 'Entrar') or contains(text(), 'Play')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-        if(playBtn && typeof playBtn.click === 'function') {{
+        if (playBtn && typeof playBtn.click === 'function') {{
             playBtn.click();
             console.log("Botão de entrada no jogo clicado automaticamente!");
         }}
-    }}, 1500);
-}}, 1500);
+    }}, 1000);
+}})();
 """
 
 
