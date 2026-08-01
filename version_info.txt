@@ -21,12 +21,12 @@ VSVersionInfo(
           [
             StringStruct(u'CompanyName', u'Bacon Knight Studio'),
             StringStruct(u'FileDescription', u'BK Launcher LO - Legend Online Smart Launcher'),
-            StringStruct(u'FileVersion', u'2.4.2.0'),
+            StringStruct(u'FileVersion', u'2.4.3.0'),
             StringStruct(u'InternalName', u'BKLauncherLO'),
             StringStruct(u'LegalCopyright', u'Copyright (c) 2026 Bacon Knight Studio'),
-            StringStruct(u'OriginalFilename', u'BKLauncherLO_v2.4.2.exe'),
+            StringStruct(u'OriginalFilename', u'BKLauncherLO_v2.4.3.exe'),
             StringStruct(u'ProductName', u'BK Launcher LO'),
-            StringStruct(u'ProductVersion', u'2.4.2.0')
+            StringStruct(u'ProductVersion', u'2.4.3.0')
           ]
         )
       ]

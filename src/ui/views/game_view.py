@@ -1,7 +1,7 @@
 import os
 import time
 import json
-from PyQt5.QtCore import Qt, QUrl, QTimer, QPoint, QEvent
+from PyQt5.QtCore import Qt, QUrl, QTimer, QPoint, QEvent, QSettings
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QShortcut, QSystemTrayIcon, QMenu, QAction,
     QFrame, QLabel
@@ -76,8 +76,9 @@ class GameView(QMainWindow, FramelessWindowMixin):
         self.tray_icon.activated.connect(self.tray_icon_activated)
 
         self.idle_timer = QTimer(self)
-        self.idle_timer.timeout.connect(self.hide_to_tray)
-        self.idle_timer.start(90000)
+        self.idle_timer.timeout.connect(self._on_idle_timeout)
+        if self.is_afk_enabled():
+            self.idle_timer.start(90000)
         
         self.shortcut_hide = QShortcut(QKeySequence("Ctrl+Shift+A"), self)
         self.shortcut_hide.activated.connect(self.hide_to_tray)
@@ -358,6 +359,17 @@ class GameView(QMainWindow, FramelessWindowMixin):
             return True, result
         return super().nativeEvent(eventType, message)
 
+    def is_afk_enabled(self) -> bool:
+        """Retorna se a opção Modo Chefe / Trabalho (inatividade e ocultar na bandeja) está ativada."""
+        settings = QSettings("BaconKnightStudio", "BKLauncherLO")
+        return settings.value("afk_enabled", True, type=bool)
+
+    def _on_idle_timeout(self):
+        if self.is_afk_enabled():
+            self.hide_to_tray()
+        else:
+            self.idle_timer.stop()
+
     def tray_icon_activated(self, reason):
         if reason == QSystemTrayIcon.DoubleClick or reason == QSystemTrayIcon.Trigger:
             self.restore_from_tray()
@@ -370,16 +382,20 @@ class GameView(QMainWindow, FramelessWindowMixin):
         self.showNormal()
         self.activateWindow()
         self.tray_icon.hide()
-        self.idle_timer.start(90000)
+        if self.is_afk_enabled():
+            self.idle_timer.start(90000)
+        else:
+            self.idle_timer.stop()
         if hasattr(self, 'controller') and hasattr(self.controller, 'check_pending_afk_relog'):
             self.controller.check_pending_afk_relog()
 
     def changeEvent(self, event):
         if event.type() == QEvent.WindowStateChange:
             if self.isMinimized():
-                QTimer.singleShot(0, self.hide_to_tray)
-                event.ignore()
-                return
+                if self.is_afk_enabled():
+                    QTimer.singleShot(0, self.hide_to_tray)
+                    event.ignore()
+                    return
             elif self.isMaximized():
                 self.main_card.setStyleSheet(f"#MainCard {{ background-color: {self.bg_color}; border-radius: 0px; border: none; }}")
             else:
@@ -393,7 +409,10 @@ class GameView(QMainWindow, FramelessWindowMixin):
             now = time.time()
             if not hasattr(self, '_last_idle_reset') or (now - self._last_idle_reset) > 10.0:
                 self._last_idle_reset = now
-                self.idle_timer.start(90000)
+                if self.is_afk_enabled():
+                    self.idle_timer.start(90000)
+                else:
+                    self.idle_timer.stop()
             
         if self.is_recording_macro:
             if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease, QEvent.KeyPress, QEvent.KeyRelease):

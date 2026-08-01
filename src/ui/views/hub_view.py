@@ -19,7 +19,7 @@ from src.ui.components.title_bar import CustomTitleBar
 
 logger = get_logger("HubView")
 
-CURRENT_APP_VERSION = "2.4.2"
+CURRENT_APP_VERSION = "2.4.3"
 
 def parse_version_tuple(v_str: str):
     import re
@@ -29,7 +29,7 @@ class UpdateCheckerThread(QThread):
     """
     Worker assíncrono para verificar se existe uma nova release no GitHub sem travar a UI.
     """
-    update_signal = pyqtSignal(bool, str, str) # (has_update, latest_version, download_url)
+    update_signal = pyqtSignal(bool, str, str, str) # (has_update, latest_version, download_url, release_notes)
 
     def run(self):
         try:
@@ -40,17 +40,18 @@ class UpdateCheckerThread(QThread):
                     data = json.loads(response.read().decode("utf-8"))
                     latest_tag = data.get("tag_name", "").strip().lstrip("v")
                     html_url = data.get("html_url", "https://github.com/Bacon-Knight/Smart_Laucher_LegendOnline/releases")
+                    release_notes = data.get("body", "")
                     
                     if latest_tag:
                         latest_tuple = parse_version_tuple(latest_tag)
                         current_tuple = parse_version_tuple(CURRENT_APP_VERSION)
                         if latest_tuple > current_tuple:
-                            self.update_signal.emit(True, latest_tag, html_url)
+                            self.update_signal.emit(True, latest_tag, html_url, release_notes)
                             return
-            self.update_signal.emit(False, CURRENT_APP_VERSION, "")
+            self.update_signal.emit(False, CURRENT_APP_VERSION, "", "")
         except Exception as e:
             logger.debug(f"Verificação de atualização indisponível ou offline: {e}")
-            self.update_signal.emit(False, CURRENT_APP_VERSION, "")
+            self.update_signal.emit(False, CURRENT_APP_VERSION, "", "")
 
 class HubView(QMainWindow):
     """
@@ -88,7 +89,7 @@ class HubView(QMainWindow):
         self.update_thread.update_signal.connect(self.on_update_result)
         self.update_thread.start()
 
-    def on_update_result(self, has_update: bool, latest_ver: str, download_url: str):
+    def on_update_result(self, has_update: bool, latest_ver: str, download_url: str, release_notes: str = ""):
         """Disparado quando a resposta da API do GitHub é recebida."""
         if has_update:
             logger.info(f"Nova versão encontrada no GitHub: v{latest_ver}")
@@ -97,12 +98,25 @@ class HubView(QMainWindow):
                 "QPushButton { background: #5c1616; border: 1px solid #ff4d4d; border-radius: 4px; color: white; font-weight: bold; padding: 2px 8px; font-size: 11px; }"
                 "QPushButton:hover { background: #ff4d4d; color: black; }"
             )
-            self.btn_update.setToolTip("Uma nova versão do Launcher está disponível! Clique para baixar no GitHub.")
-            self.btn_update.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(download_url)))
+            self.btn_update.setToolTip("Uma nova versão do Launcher está disponível! Clique para ver novidades e baixar.")
+            
+            # Se o usuário clicar no botão da barra de título, reabre o popup de atualização com os Patch Notes
+            def open_update_popup():
+                try:
+                    from src.ui.components.patch_notes_dialog import UpdateDialog
+                    dlg = UpdateDialog(version=latest_ver, download_url=download_url, release_notes=release_notes, parent=self)
+                    dlg.exec_()
+                except Exception as e:
+                    logger.debug(f"Não foi possível reabrir o popup de atualização: {e}")
+
+            self.btn_update.clicked.connect(open_update_popup)
             
             # Insere o botão de atualização na barra de título do Hub
             if hasattr(self, 'title_bar') and hasattr(self.title_bar, 'layout'):
                 self.title_bar.layout.insertWidget(2, self.btn_update)
+
+            # Exibe a janela popup de atualização interativa com o Patch Notes!
+            QTimer.singleShot(500, open_update_popup)
 
     def setup_tray(self):
         self.tray_icon = QSystemTrayIcon(self)

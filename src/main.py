@@ -23,7 +23,7 @@ from src.ui.views.hub_view import HubView
 def main() -> None:
     setup_global_exception_handler()
     logger = get_logger("Main")
-    logger.info("Iniciando o BK Launcher LO (v2.4.2)...")
+    logger.info("Iniciando o BK Launcher LO (v2.4.3)...")
     
     # Injeta permissões automáticas do Flash Player (%AppData%\Macromedia\Flash Player)
     ensure_flash_permissions()
@@ -60,7 +60,7 @@ def main() -> None:
     window = HubView(controller)
     window.show()
     
-    logger.info("BK Launcher LO v2.4.2 carregado com sucesso.")
+    logger.info("BK Launcher LO v2.4.3 carregado com sucesso.")
     sys.exit(app.exec_())
 
 

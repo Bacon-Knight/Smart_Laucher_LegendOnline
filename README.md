@@ -6,9 +6,9 @@
 
 ---
 
-O **Legend Online Custom Launcher (v2.4.2)** foi desenvolvido para fornecer o acesso definitivo, sem bugs e de altíssimo desempenho ao jogo. Construído em **Python 3** sobre a arquitetura **MVC (Model-View-Controller)** com motor C++ do **Chromium** embedado via PyQt5, trazendo consigo o Plugin PPAPI do Adobe Flash Player de forma nativa e acelerada por hardware GPU.
+O **Legend Online Custom Launcher (v2.4.3)** foi desenvolvido para fornecer o acesso definitivo, sem bugs e de altíssimo desempenho ao jogo. Construído em **Python 3** sobre a arquitetura **MVC (Model-View-Controller)** com motor C++ do **Chromium** embedado via PyQt5, trazendo consigo o Plugin PPAPI do Adobe Flash Player de forma nativa e acelerada por hardware GPU.
 
-## ✨ Por que este Launcher? (Diferenciais da v2.4.2)
+## ✨ Por que este Launcher? (Diferenciais da v2.4.3)
 
 - **Arquitetura MVC Modular:** Separação completa entre Dados/Regras (`models/`), Controladores de Aplicação (`controllers/`) e Interfaces Gráficas (`ui/views/`).
 - **Multi-Boxing com Cache Isolado (Zero Travamentos):** Jogue com dezenas de contas simultâneas. Cada conta possui seu perfil e diretório de cache de disco totalmente isolados, eliminando colisões de arquivo (*file locks*) no Windows.
@@ -58,7 +58,7 @@ A base de código está organizada sob o diretório `src/`:
 
 ### 🪟 1. Execução no Windows
 1. Acesse as [Releases Oficiais no GitHub](https://github.com/Bacon-Knight/Smart_Laucher_LegendOnline/releases/latest).
-2. Baixe o executável **`BKLauncherLO_v2.4.2.exe`**.
+2. Baixe o executável **`BKLauncherLO_v2.4.3.exe`**.
 3. Execute diretamente com dois cliques (não requer instalação prévia).
 
 ---
@@ -94,7 +94,7 @@ chmod +x Legend-Online-Launcher-v2.2-x86_64.AppImage
 
 ### 🛠️ 3. Compilação Manual no Windows (`.exe`)
 ```bash
-python -m PyInstaller --noconfirm BKLauncherLO_v2.4.2.spec
+python -m PyInstaller --noconfirm BKLauncherLO_v2.4.3.spec
 ```
 
 ---

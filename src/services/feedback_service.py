@@ -55,7 +55,7 @@ class FeedbackService:
                 data=json.dumps(payload).encode("utf-8"),
                 headers={
                     "Content-Type": "application/json",
-                    "User-Agent": "BKLauncherFeedback/2.4.2",
+                    "User-Agent": "BKLauncherFeedback/2.4.3",
                     "X-App-Secret": app_secret
                 },
                 method="POST"

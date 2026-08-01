@@ -16,7 +16,7 @@ export default async function handler(req, res) {
         return res.status(200).json({
             status: 'online',
             service: 'BK Launcher Discord Feedback Gateway',
-            version: 'v2.4.2',
+            version: 'v2.4.3',
             message: 'Gateway de feedback funcionando perfeitamente. Use POST para enviar relatórios.'
         });
     }
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
                 { name: '👤 Contato', value: user_contact || 'Anônimo', inline: true },
                 { name: '💬 Mensagem / Relatório', value: message.slice(0, 1024) }
             ],
-            footer: { text: 'BK Launcher LO • Vercel Secure Gateway v2.4.2' },
+            footer: { text: 'BK Launcher LO • Vercel Secure Gateway v2.4.3' },
             timestamp: new Date().toISOString()
         };
 

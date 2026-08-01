@@ -3,7 +3,7 @@ import sys
 import base64
 
 APP_NAME = "BK Launcher LO"
-APP_VERSION = "2.4.2"
+APP_VERSION = "2.4.3"
 
 def encrypt_password(plain_text: str) -> str:
     """Criptografa a senha usando Windows DPAPI nativa com fallback seguro em base64."""

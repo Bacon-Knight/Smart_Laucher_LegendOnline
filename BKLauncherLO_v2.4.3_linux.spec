@@ -48,7 +48,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='BKLauncherLO_v2.4.2_linux',
+    name='BKLauncherLO_v2.4.3_linux',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -69,5 +69,5 @@ coll = COLLECT(
     strip=False,
     upx=False,
     upx_exclude=[],
-    name='BKLauncherLO_v2.4.2_linux',
+    name='BKLauncherLO_v2.4.3_linux',
 )
